@@ -34,24 +34,19 @@ module.exports = class AbstractModel {
   }
 
   static async create(values) {
-    values = replaceAllNotLetterOrNumber(values);
+    // try {
+    // values = replaceAllNotLetterOrNumber(values);
 
-    const statement = `INSERT INTO ${this.name} (${Object.keys(values).map(
-      (key, index) => {
-        // let returnValue = "";
-        // if (index > 0) returnValue += ",";
-        // returnValue += key;
-        // console.log(returnValue);
-        // return returnValue;
-        return key;
-      }
-    )})
+    const statement = `INSERT INTO ${this.name} (${Object.keys(values)})
     VALUES (${Object.keys(values).map((key) => {
       return `${values[key] == null ? null : `'${values[key]}'`}`;
     })});`;
 
     console.log(statement);
     return await database.execute(statement);
+    // } catch (error) {
+    //   return error;
+    // }
   }
 
   static async findAll() {
@@ -60,14 +55,14 @@ module.exports = class AbstractModel {
   }
 
   static async findById(id) {
-    id = replaceAllNotLetterOrNumber(id);
+    // id = replaceAllNotLetterOrNumber(id);
 
     const statement = `SELECT * FROM ${this.name} WHERE id=${id};`;
     return (await database.execute(statement))[0][0];
   }
 
   static async find(conditionObj) {
-    conditionObj = replaceAllNotLetterOrNumber(conditionObj);
+    // conditionObj = replaceAllNotLetterOrNumber(conditionObj);
 
     let conditionStatement = "";
 
@@ -85,7 +80,7 @@ module.exports = class AbstractModel {
   }
 
   static async findOne(conditionObj) {
-    conditionObj = replaceAllNotLetterOrNumber(conditionObj);
+    // conditionObj = replaceAllNotLetterOrNumber(conditionObj);
 
     let conditionStatement = "";
 
@@ -103,7 +98,7 @@ module.exports = class AbstractModel {
   }
 
   static async update(conditionObj) {
-    conditionObj = replaceAllNotLetterOrNumber(conditionObj);
+    // conditionObj = replaceAllNotLetterOrNumber(conditionObj);
 
     let conditionStatement = "";
     let updateStatement = "";
@@ -131,8 +126,8 @@ module.exports = class AbstractModel {
   }
 
   static async updateOne(conditionObj, updateFields) {
-    conditionObj = replaceAllNotLetterOrNumber(conditionObj);
-    updateFields = replaceAllNotLetterOrNumber(updateFields);
+    // conditionObj = replaceAllNotLetterOrNumber(conditionObj);
+    // updateFields = replaceAllNotLetterOrNumber(updateFields);
 
     let conditionStatement = "";
     let updateStatement = "";
@@ -160,9 +155,8 @@ module.exports = class AbstractModel {
   }
 
   static async updateById(id, updateFields) {
-    id = replaceAllNotLetterOrNumber(id);
-
-    updateFields = replaceAllNotLetterOrNumber(updateFields);
+    // id = replaceAllNotLetterOrNumber(id);
+    // updateFields = replaceAllNotLetterOrNumber(updateFields);
 
     let updateStatement = "";
 
@@ -181,7 +175,7 @@ module.exports = class AbstractModel {
   }
 
   static async delete(conditionObj) {
-    conditionObj = replaceAllNotLetterOrNumber(conditionObj);
+    // conditionObj = replaceAllNotLetterOrNumber(conditionObj);
 
     let conditionStatement = "";
 
@@ -199,14 +193,14 @@ module.exports = class AbstractModel {
   }
 
   static async deleteById(id) {
-    id = replaceAllNotLetterOrNumber(id);
+    // id = replaceAllNotLetterOrNumber(id);
 
     const statement = `DELETE FROM ${this.name} WHERE id=${id};`;
     await database.execute(statement);
   }
 
   static async deleteOne(conditionObj) {
-    conditionObj = replaceAllNotLetterOrNumber(conditionObj);
+    // conditionObj = replaceAllNotLetterOrNumber(conditionObj);
 
     let conditionStatement = "";
 
@@ -231,10 +225,10 @@ const generateField = (fieldRules) => {
     field += "NOT NULL ";
 
   if (fieldRules?.minLength != null)
-    field += `CONSTRAINT minLength CHECK (LENGTH(${fieldRules.name}) >= ${fieldRules?.minLength}) `;
+    field += `CONSTRAINT minLength${fieldRules.name} CHECK (LENGTH(${fieldRules.name}) >= ${fieldRules?.minLength}) `;
 
   if (fieldRules?.maxLength != null)
-    field += `CONSTRAINT maxLength CHECK (LENGTH(${fieldRules.name}) <= ${fieldRules?.maxLength}) `;
+    field += `CONSTRAINT maxLength${fieldRules.name} CHECK (LENGTH(${fieldRules.name}) <= ${fieldRules?.maxLength}) `;
 
   if (fieldRules?.defaultValue != null)
     field += `DEFAULT '${fieldRules?.defaultValue}'`;
@@ -255,6 +249,7 @@ const generateRules = (rulesObj) => {
   return rules;
 };
 
+// Functions For Prevent Injection Attacks
 const replaceAllNotLetterOrNumber = (value) => {
   if (typeof value == "object")
     return replaceAllNotLetterOrNumberForObject(value);

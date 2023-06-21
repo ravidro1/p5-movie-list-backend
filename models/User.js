@@ -2,31 +2,24 @@ const database = require("../database");
 const AbstractModel = require("./AbstractModel");
 
 module.exports = class User extends AbstractModel {
-  constructor() {
-    super();
-  }
+  // constructor() {
+  //   super();
+  // }
 
   static fields = {
     username: {
       name: "username",
-      // unique: true,
+      unique: true,
       allowNull: false,
       type: this.dataType.string(255),
       defaultValue: 1,
-      // minLength: 5,
-      // maxLength: 10,
+      minLength: 8,
+      maxLength: 20,
     },
     password: {
       name: "password",
       type: this.dataType.string(255),
       allowNull: false,
-      // unique: true,
-    },
-    otherUserID: {
-      name: "otherUserID",
-      allowNull: true,
-      type: this.dataType.int,
-      fk: "User",
     },
     createAt: {
       name: "createAt",
@@ -42,4 +35,3 @@ module.exports = class User extends AbstractModel {
     // uniqueTogether: ["username", "password"],
   };
 };
-//default getdate()
