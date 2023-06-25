@@ -32,8 +32,8 @@ const isTokenVerify = (req, res, next) => {
 router.post("/sign-up", signUp);
 router.post("/login", login);
 router.delete("/logout", logout);
-router.get("/refresh-token", refreshToken);
 
+router.get("/refresh-token", refreshToken);
 router.get("/is-token-verify", isTokenVerify, (req, res) =>
   res.status(200).json({ message: "token valid" })
 );

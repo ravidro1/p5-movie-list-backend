@@ -1,9 +1,11 @@
 const database = require("../database");
 
 module.exports = class AbstractModel {
-  constructor() {}
+  // constructor() {}
 
-  static dataType = {
+  // #d = "234";
+
+  static _dataType = {
     char: (size) => `CHAR(${size})`,
     string: (size) => `VARCHAR(${size})`,
     int: "INT",
@@ -13,11 +15,89 @@ module.exports = class AbstractModel {
       "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
   };
 
+  static _statementTypes = {
+    select: ({
+      tableName,
+      arrayOfFields = null,
+      conditions = null,
+      limit = null,
+      nullable = true,
+    }) => {
+      let conditionStatement = generateConditions(conditions);
+
+      let formatFields = arrayOfFields?.map((field) =>
+        nullable ? field : `coalesce(${field},0)`
+      );
+      formatFields = arrayOfFields?.length > 0 ? formatFields : "*";
+
+      return `SELECT ${formatFields} FROM ${tableName}  ${
+        conditions != null ? "WHERE " + conditionStatement : ""
+      } ${limit != null ? "LIMIT " + limit : ""};`;
+    },
+
+    update: ({
+      tableName,
+      fieldForUpdate,
+      conditions = null,
+      limit = null,
+    }) => {
+      let updateStatement = "";
+      let conditionStatement = generateConditions(conditions);
+
+      Object.keys(fieldForUpdate).forEach((key, index) => {
+        if (index > 0) {
+          updateStatement += ", ";
+        }
+
+        updateStatement += `${key}=('${fieldForUpdate[key]}')`;
+      });
+
+      // .includes(".")
+
+      return `UPDATE ${tableName} SET ${updateStatement} ${
+        conditions != null ? "WHERE " + conditionStatement : ""
+      } ${limit != null ? "LIMIT " + limit : ""};`;
+    },
+
+    delete: ({ tableName, conditions = null, limit = null }) => {
+      let conditionStatement = generateConditions(conditions);
+
+      return `DELETE FROM ${tableName} ${
+        conditions != null ? "WHERE " + conditionStatement : ""
+      } ${limit != null ? "LIMIT " + limit : ""};`;
+    },
+
+    trigger: ({ triggerName, event, triggerTable, action }) => {
+      return `CREATE TRIGGER IF NOT EXISTS ${triggerName}
+      ${event}
+      ON ${triggerTable}
+      FOR EACH ROW
+      ${action}`;
+    },
+  };
+
+  static fields = {
+    createAt: {
+      name: "createAt",
+      type: this._dataType.date_create,
+    },
+    updateAt: {
+      name: "updateAt",
+      type: this._dataType.date_update,
+    },
+  };
+
+  static log() {
+    console.log(this);
+  }
+
   static async registerTable() {
     let rules = generateRules(this.rules);
     let fields = "";
 
     Object.keys(this.fields).forEach((key, index) => {
+      if (this.fields[key].name == null || this.fields[key].type == null)
+        return;
       fields += "," + generateField(this.fields[key]);
     });
 
@@ -29,14 +109,33 @@ module.exports = class AbstractModel {
 
     statement = statement.replaceAll("\n", "");
 
-    console.log(statement);
+    // console.log(statement);
     await database.execute(statement);
+
+    this.triggers?.forEach(async (trigger, index) => {
+      if (
+        trigger.triggerName == null ||
+        trigger.event == null ||
+        trigger.triggerTable == null ||
+        trigger.action == null
+      )
+        return;
+
+      let currentTriggerStatement = this._statementTypes.trigger({
+        triggerName: trigger.triggerName,
+        event: trigger.event,
+        triggerTable: trigger.triggerTable,
+        action: trigger.action,
+      });
+      currentTriggerStatement = currentTriggerStatement.replaceAll("\n", "");
+      console.log(currentTriggerStatement);
+      await database.query(currentTriggerStatement);
+    });
+    // const res = await database.execute(`select * from OneRaTe`);
+    // console.log(res);
   }
 
   static async create(values) {
-    // try {
-    // values = replaceAllNotLetterOrNumber(values);
-
     const statement = `INSERT INTO ${this.name} (${Object.keys(values)})
     VALUES (${Object.keys(values).map((key) => {
       return `${values[key] == null ? null : `'${values[key]}'`}`;
@@ -44,112 +143,73 @@ module.exports = class AbstractModel {
 
     console.log(statement);
     return await database.execute(statement);
-    // } catch (error) {
-    //   return error;
-    // }
+  }
+
+  static async findAvg(column, conditionObj) {
+    const statement = this._statementTypes
+      .select({
+        tableName: this.name,
+        arrayOfFields: [`avg(${column})`],
+        conditions: conditionObj,
+      })
+      .replaceAll(";", "");
+
+    const data = await database.execute(statement);
+    return data[0];
   }
 
   static async findAll() {
-    const data = await database.execute(`SELECT * FROM ${this.name};`);
+    const statement = this._statementTypes.select({ tableName: this.name });
+    console.log(statement);
+    const data = await database.execute(statement);
     return data[0];
   }
 
   static async findById(id) {
     // id = replaceAllNotLetterOrNumber(id);
-
-    const statement = `SELECT * FROM ${this.name} WHERE id=${id};`;
+    const statement = this._statementTypes.select({
+      tableName: this.name,
+      conditions: { id },
+    });
     return (await database.execute(statement))[0][0];
   }
 
   static async find(conditionObj) {
     // conditionObj = replaceAllNotLetterOrNumber(conditionObj);
-
-    let conditionStatement = "";
-
-    Object.keys(conditionObj).forEach((key, index) => {
-      if (index > 0) {
-        conditionStatement += " AND ";
-      }
-
-      conditionStatement += `${key}='${conditionObj[key]}'`;
+    const statement = this._statementTypes.select({
+      tableName: this.name,
+      conditions: conditionObj,
     });
-
-    const statement = `SELECT * FROM ${this.name} WHERE ${conditionStatement};`;
-
     return (await database.execute(statement))[0];
   }
 
   static async findOne(conditionObj) {
-    // conditionObj = replaceAllNotLetterOrNumber(conditionObj);
-
-    let conditionStatement = "";
-
-    Object.keys(conditionObj).forEach((key, index) => {
-      if (index > 0) {
-        conditionStatement += " AND ";
-      }
-
-      conditionStatement += `${key}='${conditionObj[key]}'`;
+    const statement = this._statementTypes.select({
+      tableName: this.name,
+      conditions: conditionObj,
+      limit: 1,
     });
-
-    const statement = `SELECT * FROM ${this.name} WHERE ${conditionStatement} LIMIT 1;`;
 
     return (await database.execute(statement))[0][0];
   }
 
-  static async update(conditionObj) {
-    // conditionObj = replaceAllNotLetterOrNumber(conditionObj);
-
-    let conditionStatement = "";
-    let updateStatement = "";
-
-    Object.keys(conditionObj).forEach((key, index) => {
-      if (index > 0) {
-        conditionStatement += " AND ";
-      }
-
-      conditionStatement += `${key}='${conditionObj[key]}'`;
+  static async update(conditionObj, updateFields) {
+    const statement = this._statementTypes.update({
+      tableName: this.name,
+      fieldForUpdate: updateFields,
+      conditions: conditionObj,
     });
-
-    Object.keys(updateFields).forEach((key, index) => {
-      if (index > 0) {
-        updateStatement += ", ";
-      }
-
-      updateStatement += `${key}='${updateFields[key]}'`;
-    });
-
-    const statement = `UPDATE ${this.name} SET ${updateStatement} WHERE ${conditionStatement};`;
-
     console.log(statement);
     await database.execute(statement);
   }
 
   static async updateOne(conditionObj, updateFields) {
-    // conditionObj = replaceAllNotLetterOrNumber(conditionObj);
-    // updateFields = replaceAllNotLetterOrNumber(updateFields);
-
-    let conditionStatement = "";
-    let updateStatement = "";
-
-    Object.keys(conditionObj).forEach((key, index) => {
-      if (index > 0) {
-        conditionStatement += " AND ";
-      }
-
-      conditionStatement += `${key}='${conditionObj[key]}'`;
+    const statement = this._statementTypes.update({
+      tableName: this.name,
+      fieldForUpdate: updateFields,
+      conditions: conditionObj,
+      limit: 1,
     });
-
-    Object.keys(updateFields).forEach((key, index) => {
-      if (index > 0) {
-        updateStatement += ", ";
-      }
-
-      updateStatement += `${key}='${updateFields[key]}'`;
-    });
-
-    const statement = `UPDATE ${this.name} SET ${updateStatement} WHERE ${conditionStatement} LIMIT 1;`;
-
     console.log(statement);
     await database.execute(statement);
   }
@@ -158,62 +218,40 @@ module.exports = class AbstractModel {
     // id = replaceAllNotLetterOrNumber(id);
     // updateFields = replaceAllNotLetterOrNumber(updateFields);
 
-    let updateStatement = "";
-
-    Object.keys(updateFields).forEach((key, index) => {
-      if (index > 0) {
-        updateStatement += ", ";
-      }
-
-      updateStatement += `${key}='${updateFields[key]}'`;
+    const statement = this._statementTypes.update({
+      tableName: this.name,
+      fieldForUpdate: updateFields,
+      conditions: { id },
+      limit: 1,
     });
-
-    const statement = `UPDATE ${this.name} SET ${updateStatement} WHERE id=${id} LIMIT 1;`;
-
     console.log(statement);
     await database.execute(statement);
   }
 
   static async delete(conditionObj) {
-    // conditionObj = replaceAllNotLetterOrNumber(conditionObj);
-
-    let conditionStatement = "";
-
-    Object.keys(conditionObj).forEach((key, index) => {
-      if (index > 0) {
-        conditionStatement += " AND ";
-      }
-
-      conditionStatement += `${key}='${conditionObj[key]}'`;
+    const statement = this._statementTypes.delete({
+      tableName: this.name,
+      conditions: conditionObj,
     });
-
-    const statement = `DELETE FROM ${this.name} WHERE ${conditionStatement};`;
-
     await database.execute(statement);
   }
 
   static async deleteById(id) {
     // id = replaceAllNotLetterOrNumber(id);
-
-    const statement = `DELETE FROM ${this.name} WHERE id=${id};`;
+    const statement = this._statementTypes.delete({
+      tableName: this.name,
+      conditions: { id },
+      limit: 1,
+    });
     await database.execute(statement);
   }
 
   static async deleteOne(conditionObj) {
-    // conditionObj = replaceAllNotLetterOrNumber(conditionObj);
-
-    let conditionStatement = "";
-
-    Object.keys(conditionObj).forEach((key, index) => {
-      if (index > 0) {
-        conditionStatement += " AND ";
-      }
-
-      conditionStatement += `${key}='${conditionObj[key]}'`;
+    const statement = this._statementTypes.delete({
+      tableName: this.name,
+      conditions: conditionObj,
+      limit: 1,
     });
-
-    const statement = `DELETE FROM ${this.name} WHERE ${conditionStatement} LIMIT 1;`;
-
     await database.execute(statement);
   }
 };
@@ -246,7 +284,22 @@ const generateRules = (rulesObj) => {
   let rules = "";
   if (rulesObj?.uniqueTogether?.length > 1)
     rules += `,CONSTRAINT uniqueTogether UNIQUE (${rulesObj.uniqueTogether.toString()})`;
+
   return rules;
+};
+
+const generateConditions = (condition) => {
+  conditionStatement = "";
+  if (condition != null) {
+    Object.keys(condition).forEach((key, index) => {
+      if (index > 0) {
+        conditionStatement += " AND ";
+      }
+
+      conditionStatement += `${key}='${condition[key]}'`;
+    });
+  }
+  return conditionStatement;
 };
 
 // Functions For Prevent Injection Attacks
