@@ -2,6 +2,8 @@ const AbstractModel = require("./AbstractModel");
 
 module.exports = class OneRate extends AbstractModel {
   static fields = {
+    ...this.fields,
+
     user_id: {
       name: "user_id",
       type: this._dataType.int,
@@ -17,8 +19,6 @@ module.exports = class OneRate extends AbstractModel {
     rate: { name: "rate", type: this._dataType.float, defaultValue: 0 },
     allowNull: false,
   };
-
-  // ON DELETE CASCADE
 
   static rules = {
     uniqueTogether: ["user_id", "movie_id"],
@@ -39,6 +39,13 @@ module.exports = class OneRate extends AbstractModel {
             nullable: false,
             semicolon: false,
           })}`,
+          `numberOfRate=${this._statementTypes.select({
+            tableName: this.name,
+            arrayOfFields: ["count(rate)"],
+            statementConditions: ["onerate.movie_id=moviereview.id"],
+            nullable: false,
+            semicolon: false,
+          })}`,
         ],
         statementConditions: ["moviereview.id=new.movie_id"],
       }),
@@ -54,6 +61,13 @@ module.exports = class OneRate extends AbstractModel {
           `averageRateScore=${this._statementTypes.select({
             tableName: this.name,
             arrayOfFields: ["avg(rate)"],
+            statementConditions: ["onerate.movie_id=moviereview.id"],
+            nullable: false,
+            semicolon: false,
+          })}`,
+          `numberOfRate=${this._statementTypes.select({
+            tableName: this.name,
+            arrayOfFields: ["count(rate)"],
             statementConditions: ["onerate.movie_id=moviereview.id"],
             nullable: false,
             semicolon: false,
@@ -82,46 +96,3 @@ module.exports = class OneRate extends AbstractModel {
     // },
   ];
 };
-
-// {
-//   triggerName: `${this.name}1`,
-//   event: "AFTER UPDATE",
-//   triggerTable: this.name,
-//   action: this._statementTypes.ifExists({
-//     condition: this._statementTypes
-//       .select({
-//         tableName: "MovieReview",
-//         conditions: { name: "onerate.movie_name" },
-//         semicolon: false,
-//       })
-//       .replaceAll("'", ""),
-//     action: this._statementTypes
-//       .update({
-//         tableName: "MovieReview",
-//         fieldForUpdate: {
-//           averageRateScore: this._statementTypes.select({
-//             tableName: this.name,
-//             arrayOfFields: ["avg(rate)"],
-//             conditions: { movie_name: "moviereview.name" },
-//             nullable: false,
-//             semicolon: false,
-//           }),
-//         },
-//         conditions: { id: "new.movie_id" },
-//         semicolon: false,
-//       })
-//       .replaceAll("'", ""),
-//     elseAction: this._statementTypes.insert({
-//       tableName: "MovieReview",
-//       values: { name: "q", rate: 5 },
-//     }),
-//   }),
-// },
-
-// CREATE TRIGGER  tr1
-// after insert
-// ON onerate
-// FOR each row
-// update moviereview
-// set averageRateScore= (SELECT coalesce(avg(rate) ,0 FROM onerate WHERE onerate.movie_id=moviereview.id)
-// where moviereview.id=new.movie_id;

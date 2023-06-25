@@ -18,11 +18,9 @@ module.exports = class AbstractModel {
       return `REPLACE INTO ${tableName} (${keysInString}) VALUES(${valuesInString}) ${
         semicolon ? ";" : ""
       }`;
-      // return `INSERT INTO ${this._statementTypes.insert(tableName, values)}
-      //         ON DUPLICATE key UPDATE username='1111111111114';`;
     },
 
-    ifExists: ({ condition, action, elseAction }) => {
+    selectIfExists: ({ condition, action, elseAction }) => {
       console.log(action);
       return `SELECT CASE WHEN EXISTS (${condition}) THEN ${action} ELSE ${elseAction} END;`;
     },
@@ -41,56 +39,19 @@ module.exports = class AbstractModel {
       VALUES (${valuesInString});`;
     },
 
-    // select: ({
-    //   tableName,
-    //   arrayOfFields = null,
-    //   conditions = null,
-    //   limit = null,
-    //   nullable = true,
-    //   semicolon = true,
-    // }) => {
-    //   let conditionStatement = generateConditions(conditions);
-
-    //   let formatFields = arrayOfFields?.map((field) =>
-    //     nullable ? field : `coalesce(${field},0)`
-    //   );
-    //   formatFields = arrayOfFields?.length > 0 ? formatFields : "*";
-
-    //   return `SELECT ${formatFields} FROM ${tableName}  ${
-    //     conditions != null ? "WHERE " + conditionStatement : ""
-    //   } ${limit != null ? "LIMIT " + limit : ""} ${semicolon ? ";" : ""}`;
-    // },
-
-    // update: ({
-    //   tableName,
-    //   fieldForUpdate,
-    //   conditions = null,
-    //   limit = null,
-    //   semicolon = true,
-    // }) => {
-    //   let updateStatement = "";
-    //   let conditionStatement = generateConditions(conditions);
-
-    //   Object.keys(fieldForUpdate).forEach((key, index) => {
-    //     if (index > 0) {
-    //       updateStatement += ", ";
-    //     }
-
-    //     updateStatement += `${key}=('${fieldForUpdate[key]}')`;
-    //   });
-
-    //   // .includes(".")
-
-    //   return `UPDATE ${tableName} SET ${updateStatement} ${
-    //     conditions != null ? "WHERE " + conditionStatement : ""
-    //   } ${limit != null ? "LIMIT " + limit : ""}  ${semicolon ? ";" : ""}`;
-    // },
-
-    delete: ({ tableName, conditions = null, limit = null }) => {
-      let conditionStatement = generateConditions(conditions);
+    delete: ({
+      tableName,
+      objConditions = null,
+      statementConditions = null,
+      limit = null,
+    }) => {
+      let conditionStatement = generateConditions(
+        objConditions,
+        statementConditions
+      );
 
       return `DELETE FROM ${tableName} ${
-        conditions != null ? "WHERE " + conditionStatement : ""
+        conditionStatement != null ? "WHERE " + conditionStatement : ""
       } ${limit != null ? "LIMIT " + limit : ""};`;
     },
 

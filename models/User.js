@@ -1,10 +1,6 @@
 const AbstractModel = require("./AbstractModel");
 
 module.exports = class User extends AbstractModel {
-  // constructor() {
-  //   super();
-  // }
-
   static fields = {
     ...this.fields,
     username: {
@@ -12,7 +8,6 @@ module.exports = class User extends AbstractModel {
       unique: true,
       allowNull: false,
       type: this._dataType.string(255),
-      defaultValue: 1,
       minLength: 8,
       maxLength: 20,
     },
@@ -21,9 +16,5 @@ module.exports = class User extends AbstractModel {
       type: this._dataType.string(255),
       allowNull: false,
     },
-  };
-
-  static rules = {
-    // uniqueTogether: ["username", "password"],
   };
 };
