@@ -8,4 +8,6 @@ const pool = mysql.createPool({
   multipleStatements: false,
 });
 
+// pool.execute("SET SQL_SAFE_UPDATES = 0;");
+
 module.exports = pool.promise();
