@@ -20,11 +20,6 @@ module.exports = class AbstractModel {
       }`;
     },
 
-    selectIfExists: ({ condition, action, elseAction }) => {
-      console.log(action);
-      return `SELECT CASE WHEN EXISTS (${condition}) THEN ${action} ELSE ${elseAction} END;`;
-    },
-
     insert: ({ tableName, values }) => {
       const keysInString = Object.keys(values).toString();
       const valuesInString = Object.keys(values)
@@ -37,30 +32,6 @@ module.exports = class AbstractModel {
 
       return `INSERT INTO ${tableName} (${keysInString})
       VALUES (${valuesInString});`;
-    },
-
-    delete: ({
-      tableName,
-      objConditions = null,
-      statementConditions = null,
-      limit = null,
-    }) => {
-      let conditionStatement = generateConditions(
-        objConditions,
-        statementConditions
-      );
-
-      return `DELETE FROM ${tableName} ${
-        conditionStatement != null ? "WHERE " + conditionStatement : ""
-      } ${limit != null ? "LIMIT " + limit : ""};`;
-    },
-
-    trigger: ({ triggerName, event, triggerTable, action }) => {
-      return `CREATE TRIGGER IF NOT EXISTS ${triggerName}
-      ${event}
-      ON ${triggerTable}
-      FOR EACH ROW
-      ${action}`;
     },
 
     select: ({
@@ -110,6 +81,35 @@ module.exports = class AbstractModel {
         conditionStatement ? "WHERE " + conditionStatement : ""
       } ${limit != null ? "LIMIT " + limit : ""}  ${semicolon ? ";" : ""}`;
     },
+
+    delete: ({
+      tableName,
+      objConditions = null,
+      statementConditions = null,
+      limit = null,
+    }) => {
+      let conditionStatement = generateConditions(
+        objConditions,
+        statementConditions
+      );
+
+      return `DELETE FROM ${tableName} ${
+        conditionStatement != null ? "WHERE " + conditionStatement : ""
+      } ${limit != null ? "LIMIT " + limit : ""};`;
+    },
+
+    trigger: ({ triggerName, event, triggerTable, action }) => {
+      return `CREATE TRIGGER IF NOT EXISTS ${triggerName}
+      ${event}
+      ON ${triggerTable}
+      FOR EACH ROW
+      ${action}`;
+    },
+
+    selectIfExists: ({ condition, action, elseAction }) => {
+      console.log(action);
+      return `SELECT CASE WHEN EXISTS (${condition}) THEN ${action} ELSE ${elseAction} END;`;
+    },
   };
 
   static fields = {
@@ -135,6 +135,19 @@ module.exports = class AbstractModel {
       if (this.fields[key].name == null || this.fields[key].type == null)
         return;
       fields += "," + generateField(this.fields[key]);
+
+      const fk = this.fields[key].fk;
+      if (fk?.onDelete == "DELETE") {
+        this.triggers.push({
+          triggerName: `${this.name}fk${this.fields[key].name}OnDelete`,
+          event: "BEFORE DELETE",
+          triggerTable: fk?.table,
+          action: this._statementTypes.delete({
+            tableName: this.name,
+            statementConditions: [`${this.fields[key].name}=old.id`],
+          }),
+        });
+      }
     });
 
     let statement = `CREATE TABLE IF NOT EXISTS ${this.name} (
@@ -147,6 +160,16 @@ module.exports = class AbstractModel {
 
     // console.log("\n" + statement + "\n" + "\n" + "\n");
     await database.execute(statement);
+
+    //
+    // await database.execute(
+    //   this._statementTypes.onDeleteTrigger({
+    //     triggerName: `${this.name}fk${fieldRules.name}OnDelete`,
+    //     fkName: fieldRules.name,
+    //     tableFK: fieldRules?.fk?.table,
+    //   })
+    // );
+    console.log(this.triggers);
 
     this.triggers?.forEach(async (trigger, index) => {
       if (
@@ -307,11 +330,18 @@ const generateField = (fieldRules) => {
 
   if (fieldRules?.fk)
     field += ` ,
-      FOREIGN KEY (${fieldRules.name}) REFERENCES ${
-      fieldRules?.fk?.table
-    }(id) ${
-      fieldRules?.fk?.onDelete ? `ON DELETE ${fieldRules?.fk?.onDelete}` : ""
-    }`;
+      FOREIGN KEY (${fieldRules.name}) REFERENCES ${fieldRules?.fk?.table}(id)`;
+
+  if (fieldRules?.fk)
+    field += ` ,
+      FOREIGN KEY (${fieldRules.name}) REFERENCES ${fieldRules?.fk?.table}(id) `;
+  // if (fieldRules?.fk)
+  //   field += ` ,
+  //     FOREIGN KEY (${fieldRules.name}) REFERENCES ${
+  //     fieldRules?.fk?.table
+  //   }(id) ${
+  //     fieldRules?.fk?.onDelete ? `ON DELETE ${fieldRules?.fk?.onDelete}` : ""
+  //   }`;
 
   if (fieldRules?.unique) field += `,UNIQUE (${fieldRules.name})`;
 

@@ -7,13 +7,21 @@ module.exports = class OneRate extends AbstractModel {
     user_id: {
       name: "user_id",
       type: this._dataType.int,
-      fk: { table: "User", onDelete: "CASCADE" },
+      fk: {
+        table: "User",
+        onDelete: "DELETE",
+      },
+      // fk: { table: "User", onDelete: "CASCADE" },
       allowNull: false,
     },
     movie_id: {
       name: "movie_id",
       type: this._dataType.int,
-      fk: { table: "MovieReview", onDelete: "CASCADE" },
+      fk: {
+        table: "MovieReview",
+        onDelete: "DELETE",
+      },
+      // fk: { table: "MovieReview", onDelete: "CASCADE" },
       allowNull: false,
     },
     rate: { name: "rate", type: this._dataType.float, defaultValue: 0 },
@@ -76,23 +84,37 @@ module.exports = class OneRate extends AbstractModel {
         statementConditions: ["moviereview.id=new.movie_id"],
       }),
     },
-    // {
-    //   triggerName: `${this.name}3`,
-    //   event: "BEFORE DELETE",
-    //   triggerTable: this.name,
-    //   action: this._statementTypes.update({
-    //     tableName: "MovieReview",
-    //     statementFieldForUpdate: [
-    //       `averageRateScore=${this._statementTypes.select({
-    //         tableName: this.name,
-    //         arrayOfFields: ["avg(rate)"],
-    //         statementConditions: ["onerate.movie_id=moviereview.id"],
-    //         nullable: false,
-    //         semicolon: false,
-    //       })}`,
-    //     ],
-    //     statementConditions: ["moviereview.id=onerate.movie_id"],
-    //   }),
-    // },
+
+    {
+      triggerName: `${this.name}3`,
+      event: "BEFORE DELETE",
+      triggerTable: this.name,
+      action: this._statementTypes.update({
+        tableName: "MovieReview",
+        statementFieldForUpdate: [
+          `averageRateScore=${this._statementTypes.select({
+            tableName: this.name,
+            arrayOfFields: ["avg(rate)"],
+            statementConditions: ["old.movie_id=moviereview.id"],
+            nullable: false,
+            semicolon: false,
+          })}`,
+          `numberOfRate=${this._statementTypes.select({
+            tableName: this.name,
+            arrayOfFields: ["count(rate)"],
+            statementConditions: ["old.movie_id=moviereview.id"],
+            nullable: false,
+            semicolon: false,
+          })}`,
+        ],
+        statementConditions: ["moviereview.id=old.movie_id"],
+      }),
+    },
   ];
 };
+
+`CREATE TRIGGER IF NOT EXISTS name
+AFTER DELETE 
+ON MovieReview
+FOR EACH ROW
+DELETE FROM OneRate WHERE conditionStatement`;

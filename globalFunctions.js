@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-export const isTokenVerify = (req, res, next) => {
+const isTokenVerify = (req, res, next) => {
   try {
     const token = req.headers["x-access-token"];
 
@@ -20,3 +20,7 @@ export const isTokenVerify = (req, res, next) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+
+module.exports = { isTokenVerify };
