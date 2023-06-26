@@ -10,6 +10,12 @@ module.exports = class MovieReview extends AbstractModel {
       unique: true,
       allowNull: false,
     },
+    normalizeName: {
+      name: "normalizeName",
+      type: this._dataType.char(255),
+      unique: true,
+      allowNull: false,
+    },
     averageRateScore: {
       name: "averageRateScore",
       type: this._dataType.float,

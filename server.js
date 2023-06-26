@@ -21,6 +21,12 @@ async function registerTable() {
 async function main() {
   await registerTable();
 
+  // log the path before every request
+  app.use((req, res, next) => {
+    console.log(req.path);
+    next();
+  });
+
   app.use("/user", userRoutes);
   app.use("/movieReview", movieReviewRoutes);
 

@@ -12,26 +12,16 @@ module.exports = class AbstractModel {
   };
 
   static _statementTypes = {
-    insertOrUpdate: ({ tableName, values, semicolon = true }) => {
+    insert: ({ INSERT_OR_REPLACE = "INSERT", tableName, values }) => {
       const keysInString = Object.keys(values).toString();
-      const valuesInString = Object.keys(values);
-      return `REPLACE INTO ${tableName} (${keysInString}) VALUES(${valuesInString}) ${
-        semicolon ? ";" : ""
-      }`;
-    },
-
-    insert: ({ tableName, values }) => {
-      const keysInString = Object.keys(values).toString();
-      const valuesInString = Object.keys(values)
-        .map((key) => {
-          return `${values[key] == null ? null : `'${values[key]}'`}`;
+      const valuesInString = Object.values(values)
+        .map((value) => {
+          InvalidCharsError(value);
+          return `${value == null ? null : `'${value}'`}`;
         })
         .toString();
 
-      console.log(keysInString, valuesInString);
-
-      return `INSERT INTO ${tableName} (${keysInString})
-      VALUES (${valuesInString});`;
+      return `${INSERT_OR_REPLACE} INTO ${tableName} (${keysInString}) VALUES (${valuesInString});`;
     },
 
     select: ({
@@ -42,6 +32,7 @@ module.exports = class AbstractModel {
       limit = null,
       nullable = true,
       semicolon = true,
+      orderBy = null,
     }) => {
       let conditionStatement = generateConditions(
         objConditions,
@@ -75,7 +66,6 @@ module.exports = class AbstractModel {
         objConditions,
         statementConditions
       );
-      // console.log(updateStatement, conditionStatement, 411234);
 
       return `UPDATE ${tableName} SET ${updateStatement} ${
         conditionStatement ? "WHERE " + conditionStatement : ""
@@ -107,10 +97,10 @@ module.exports = class AbstractModel {
       ${action}`;
     },
 
-    selectIfExists: ({ condition, action, elseAction }) => {
-      console.log(action);
-      return `SELECT CASE WHEN EXISTS (${condition}) THEN ${action} ELSE ${elseAction} END;`;
-    },
+    // selectIfExists: ({ condition, action, elseAction }) => {
+    //   console.log(action);
+    //   return `SELECT CASE WHEN EXISTS (${condition}) THEN ${action} ELSE ${elseAction} END;`;
+    // },
   };
 
   static fields = {
@@ -123,10 +113,6 @@ module.exports = class AbstractModel {
       type: this._dataType.date_update,
     },
   };
-
-  static log() {
-    console.log(this);
-  }
 
   static async registerTable() {
     let rules = generateRules(this.rules);
@@ -163,7 +149,7 @@ module.exports = class AbstractModel {
     // console.log("\n" + statement + "\n" + "\n" + "\n");
     await database.execute(statement);
 
-    console.log(this.triggers);
+    // console.log(this.triggers);
 
     this.triggers?.forEach(async (trigger, index) => {
       if (
@@ -192,18 +178,17 @@ module.exports = class AbstractModel {
       values,
     });
 
-    console.log(statement);
-    return await database.execute(statement);
+    const res = await database.execute(statement);
+
+    return this.findById(res[0].insertId);
   }
 
   static async findAvg(column, conditionObj) {
-    const statement = this._statementTypes
-      .select({
-        tableName: this.name,
-        arrayOfFields: [`avg(${column})`],
-        conditions: conditionObj,
-      })
-      .replaceAll(";", "");
+    const statement = this._statementTypes.select({
+      tableName: this.name,
+      arrayOfFields: [`avg(${column})`],
+      conditions: conditionObj,
+    });
 
     const data = await database.execute(statement);
     return data[0];
@@ -276,7 +261,8 @@ module.exports = class AbstractModel {
       limit: 1,
     });
     console.log(statement);
-    await database.execute(statement);
+    const res = await database.execute(statement);
+    return res[0].affectedRows;
   }
 
   static async delete(conditionObj) {
@@ -284,17 +270,18 @@ module.exports = class AbstractModel {
       tableName: this.name,
       objConditions: conditionObj,
     });
-    await database.execute(statement);
+    const res = await database.execute(statement);
+    return res[0].affectedRows;
   }
 
   static async deleteById(id) {
-    // id = replaceAllNotLetterOrNumber(id);
     const statement = this._statementTypes.delete({
       tableName: this.name,
       objConditions: { id },
       limit: 1,
     });
-    await database.execute(statement);
+    const res = await database.execute(statement);
+    return res[0].affectedRows;
   }
 
   static async deleteOne(conditionObj) {
@@ -303,7 +290,12 @@ module.exports = class AbstractModel {
       objConditions: conditionObj,
       limit: 1,
     });
-    await database.execute(statement);
+    const res = await database.execute(statement);
+    return res[0].affectedRows;
+  }
+
+  static log() {
+    console.log(this);
   }
 };
 
@@ -321,14 +313,6 @@ const generateField = (fieldRules) => {
 
   if (fieldRules?.defaultValue != null)
     field += `DEFAULT '${fieldRules?.defaultValue}'`;
-
-  // if (fieldRules?.fk){
-  //   const fk = fieldRules?.fk
-
-  // }
-
-  //   field += ` ,
-  //     FOREIGN KEY (${fieldRules.name}) REFERENCES ${fieldRules?.fk?.table}(id)`;
 
   if (fieldRules?.fk)
     field += ` ,
@@ -364,6 +348,8 @@ const generateConditions = (
         conditionStatement += " AND ";
       }
 
+      InvalidCharsError(condition);
+
       const splitUpdateField = condition.split("=");
       const key = splitUpdateField[0];
       const value = splitUpdateField.slice(1).join("=");
@@ -377,10 +363,24 @@ const generateConditions = (
         conditionStatement += " AND ";
       }
 
-      conditionStatement += `${key}='${objConditions[key]}'`;
+      InvalidCharsError(objConditions[key]);
+
+      if (Array.isArray(objConditions[key]))
+        conditionStatement += `${key} BETWEEN ${objConditions[key][0]} AND ${objConditions[key][1]}`;
+      // conditionStatement += `${key} BETWEEN ${objConditions[key].map(
+      //   (value, i) => {
+      //     const returnValue = "";
+      //     if (i > 0) {
+      //       returnValue += " AND ";
+      //     }
+      //     returnValue += value;
+      //     return returnValue;
+      //   }
+      // )}`;
+      else conditionStatement += `${key}='${objConditions[key]}'`;
     });
   }
-  // console.log(conditionStatement);
+  // console.log(conditionStatement, 1);
   return conditionStatement;
 };
 
@@ -395,6 +395,9 @@ const generateUpdateFields = (
       if (index > 0) {
         updateStatement += ", ";
       }
+
+      InvalidCharsError(updateField);
+
       const splitUpdateField = updateField.split("=");
       const key = splitUpdateField[0];
       const value = splitUpdateField.slice(1).join("=");
@@ -408,11 +411,23 @@ const generateUpdateFields = (
         updateStatement += ", ";
       }
 
+      InvalidCharsError(objFieldForUpdate[key]);
+
       updateStatement += `${key}='${objFieldForUpdate[key]}'`;
     });
   }
 
   return updateStatement;
+};
+
+const InvalidCharsError = (stringValue) => {
+  if (typeof stringValue != "string") return;
+
+  if (
+    !/^[A-Za-z0-9=;_.-\s,()]*$/.test(stringValue) ||
+    stringValue.includes("--")
+  )
+    throw new Error("Contain Invalid Chars");
 };
 
 // Functions For Prevent Injection Attacks
