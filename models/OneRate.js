@@ -4,14 +4,29 @@ module.exports = class OneRate extends AbstractModel {
   static fields = {
     ...this.fields,
 
+    // fields:
+    //? TYPES:
+    // name:
+    // type:
+    // allowNull?:
+    // defaultValue?:
+    // minLength?:
+    // maxLength?:
+    // unique?:
+    // fk? - create foreign key  {
+    //    onDelete: {
+    //!      DELETE_WITH_TRIGGER - delete all items with this fk but not working when current table have trigger for update the fk-table on this-table delete.
+    //!      CASCADE - delete all items with this fk but does not activate the delete trigger of current table.
+    //    }
+    // }
+
     user_id: {
       name: "user_id",
       type: this._dataType.int,
       fk: {
         table: "User",
-        onDelete: "DELETE",
+        onDelete: "DELETE_WITH_TRIGGER",
       },
-      // fk: { table: "User", onDelete: "CASCADE" },
       allowNull: false,
     },
     movie_id: {
@@ -19,9 +34,8 @@ module.exports = class OneRate extends AbstractModel {
       type: this._dataType.int,
       fk: {
         table: "MovieReview",
-        onDelete: "DELETE",
+        onDelete: "CASCADE",
       },
-      // fk: { table: "MovieReview", onDelete: "CASCADE" },
       allowNull: false,
     },
     rate: { name: "rate", type: this._dataType.float, defaultValue: 0 },
@@ -87,7 +101,7 @@ module.exports = class OneRate extends AbstractModel {
 
     {
       triggerName: `${this.name}3`,
-      event: "BEFORE DELETE",
+      event: "AFTER DELETE",
       triggerTable: this.name,
       action: this._statementTypes.update({
         tableName: "MovieReview",
@@ -95,14 +109,14 @@ module.exports = class OneRate extends AbstractModel {
           `averageRateScore=${this._statementTypes.select({
             tableName: this.name,
             arrayOfFields: ["avg(rate)"],
-            statementConditions: ["old.movie_id=moviereview.id"],
+            statementConditions: ["movie_id=moviereview.id"],
             nullable: false,
             semicolon: false,
           })}`,
           `numberOfRate=${this._statementTypes.select({
             tableName: this.name,
             arrayOfFields: ["count(rate)"],
-            statementConditions: ["old.movie_id=moviereview.id"],
+            statementConditions: ["movie_id=moviereview.id"],
             nullable: false,
             semicolon: false,
           })}`,
@@ -112,9 +126,3 @@ module.exports = class OneRate extends AbstractModel {
     },
   ];
 };
-
-`CREATE TRIGGER IF NOT EXISTS name
-AFTER DELETE 
-ON MovieReview
-FOR EACH ROW
-DELETE FROM OneRate WHERE conditionStatement`;
