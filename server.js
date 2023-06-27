@@ -31,6 +31,7 @@ async function main() {
   app.use("/movieReview", movieReviewRoutes);
 
   app.listen(PORT, () => console.log("Listen To Port: ", PORT));
+
 }
 
 main();

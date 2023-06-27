@@ -2,13 +2,26 @@ const database = require("../database");
 
 module.exports = class AbstractModel {
   static _dataType = {
+    json: "JSON",
     char: (size) => `CHAR(${size})`,
     string: (size) => `VARCHAR(${size})`,
     int: "INT",
     float: "FLOAT",
+    date: "TIMESTAMP",
     date_create: "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
     date_update:
       "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+  };
+
+  static fields = {
+    createAt: {
+      name: "createAt",
+      type: this._dataType.date_create,
+    },
+    updateAt: {
+      name: "updateAt",
+      type: this._dataType.date_update,
+    },
   };
 
   static _statementTypes = {
@@ -103,16 +116,25 @@ module.exports = class AbstractModel {
     // },
   };
 
-  static fields = {
-    createAt: {
-      name: "createAt",
-      type: this._dataType.date_create,
-    },
-    updateAt: {
-      name: "updateAt",
-      type: this._dataType.date_update,
-    },
-  };
+  // static abstractFunction = {
+  //   select: () => {},
+  //   insert: async (INSERT_OR_REPLACE, tableName, values) => {
+  //     const statement = this._statementTypes.insert({
+  //       INSERT_OR_REPLACE,
+  //       tableName,
+  //       values,
+  //     });
+  //     const valuesCopy = { ...values };
+  //     Object.keys(values).forEach((key) => {
+  //       if (Array.isArray(values[key]))
+  //         values[key] = JSON.stringify(values[key]);
+  //     });
+
+  //     return await database.execute(statement);
+  //   },
+  //   update: () => {},
+  //   delete: () => {},
+  // };
 
   static async registerTable() {
     let rules = generateRules(this.rules);
@@ -424,10 +446,10 @@ const InvalidCharsError = (stringValue) => {
   if (typeof stringValue != "string") return;
 
   if (
-    !/^[A-Za-z0-9=;_.-\s,()]*$/.test(stringValue) ||
+    !/^[A-Za-z0-9=;_.-\s,()"\[\]]*$/.test(stringValue) ||
     stringValue.includes("--")
   )
-    throw new Error("Contain Invalid Chars");
+    throw new Error("Contain Invalid Chars: " + stringValue);
 };
 
 // Functions For Prevent Injection Attacks

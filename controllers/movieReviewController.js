@@ -28,17 +28,21 @@ exports.createMovie = async (req, res) => {
   try {
     const regexPattern = /[^A-Za-z0-9]/g;
 
-    const { movieName } = req.body;
-    const normalizeName = movieName.toLowerCase().replace(regexPattern, "");
+    const { name, description, releaseDate, categories } = req.body;
+    const normalizeName = name.toLowerCase().replace(regexPattern, "");
 
     const newMovie = await MovieReview.create({
-      name: movieName,
+      name: name,
       normalizeName,
+      description,
+      releaseDate,
+      categories: JSON.stringify(categories),
     });
-    console.log(newMovie);
+
     if (!newMovie) return res.status(400).json({ message: "fail" });
     res.status(200).json({ message: "success", newMovie });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: error.message });
   }
 };

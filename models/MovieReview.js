@@ -22,12 +22,16 @@ module.exports = class MovieReview extends AbstractModel {
       defaultValue: 0,
       allowNull: false,
     },
+
     numberOfRate: {
       name: "numberOfRate",
       type: this._dataType.int,
       defaultValue: 0,
       allowNull: false,
     },
+    description: { name: "description", type: this._dataType.string(4000) },
+    categories: { name: "categories", type: this._dataType.json },
+    releaseDate: { name: "releaseDate", type: this._dataType.date },
   };
 
   static rules = {};
