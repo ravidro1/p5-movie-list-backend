@@ -21,6 +21,26 @@ const isTokenVerify = (req, res, next) => {
   }
 };
 
+const StringInvalidCharsError = (stringValue) => {
+  if (typeof stringValue != "string") return;
 
+  if (
+    !/^[$A-Za-z0-9=;_.-\s,()"^\[\]]*$/.test(stringValue) ||
+    stringValue.includes("--")
+  )
+    throw new Error(`Contain Invalid Chars: ${stringValue}`);
+};
 
-module.exports = { isTokenVerify };
+const ArrayInvalidCharsError = (arrayOfValues) => {
+  if (!Array.isArray(arrayOfValues)) return;
+
+  arrayOfValues.forEach((value) => {
+    StringInvalidCharsError(value);
+  });
+};
+
+module.exports = {
+  isTokenVerify,
+  StringInvalidCharsError,
+  ArrayInvalidCharsError,
+};

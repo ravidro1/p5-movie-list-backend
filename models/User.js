@@ -1,4 +1,5 @@
 const AbstractModel = require("./AbstractModel");
+const { _fieldsDataTypes } = require("./Models.Types");
 
 module.exports = class User extends AbstractModel {
   static fields = {
@@ -7,13 +8,13 @@ module.exports = class User extends AbstractModel {
       name: "username",
       unique: true,
       allowNull: false,
-      type: this._dataType.string(255),
+      type: _fieldsDataTypes.string(255),
       minLength: 8,
       maxLength: 20,
     },
     password: {
       name: "password",
-      type: this._dataType.string(255),
+      type: _fieldsDataTypes.string(255),
       allowNull: false,
     },
   };

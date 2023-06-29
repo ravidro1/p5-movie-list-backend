@@ -1,4 +1,10 @@
 const AbstractModel = require("./AbstractModel");
+const {
+  _fieldsDataTypes,
+  _statementTypes,
+  _updateTypes,
+  _conditionTypes,
+} = require("./Models.Types");
 
 module.exports = class OneRate extends AbstractModel {
   static fields = {
@@ -22,7 +28,7 @@ module.exports = class OneRate extends AbstractModel {
 
     user_id: {
       name: "user_id",
-      type: this._dataType.int,
+      type: _fieldsDataTypes.int,
       fk: {
         table: "User",
         onDelete: "DELETE_WITH_TRIGGER",
@@ -31,14 +37,14 @@ module.exports = class OneRate extends AbstractModel {
     },
     movie_id: {
       name: "movie_id",
-      type: this._dataType.int,
+      type: _fieldsDataTypes.int,
       fk: {
         table: "MovieReview",
         onDelete: "CASCADE",
       },
       allowNull: false,
     },
-    rate: { name: "rate", type: this._dataType.float, defaultValue: 0 },
+    rate: { name: "rate", type: _fieldsDataTypes.float, defaultValue: 0 },
     allowNull: false,
   };
 
@@ -47,82 +53,159 @@ module.exports = class OneRate extends AbstractModel {
   };
 
   static triggers = [
-    {
+    _statementTypes.trigger({
       triggerName: `${this.name}1`,
       event: "AFTER UPDATE",
       triggerTable: this.name,
-      action: this._statementTypes.update({
+      action: _statementTypes.update({
         tableName: "MovieReview",
         statementFieldForUpdate: [
-          `averageRateScore=${this._statementTypes.select({
-            tableName: this.name,
-            arrayOfFields: ["avg(rate)"],
-            statementConditions: ["onerate.movie_id=moviereview.id"],
-            nullable: false,
-            semicolon: false,
-          })}`,
-          `numberOfRate=${this._statementTypes.select({
-            tableName: this.name,
-            arrayOfFields: ["count(rate)"],
-            statementConditions: ["onerate.movie_id=moviereview.id"],
-            nullable: false,
-            semicolon: false,
-          })}`,
-        ],
-        statementConditions: ["moviereview.id=new.movie_id"],
-      }),
-    },
+          _updateTypes.equal({
+            key: { keyValue: "averageRateScore" },
+            value: {
+              valueValue: _statementTypes.selectFrom({
+                tableName: this.name,
+                arrayOfFields: ["avg(rate)"],
+                statementConditions: [
+                  _conditionTypes.equal({
+                    key: { keyValue: "onerate.movie_id" },
+                    value: { valueValue: "moviereview.id" },
+                  }),
+                ],
+                nullable: false,
+                semicolon: false,
+              }),
+            },
+          }),
 
-    {
+          _updateTypes.equal({
+            key: { keyValue: "numberOfRate" },
+            value: {
+              valueValue: _statementTypes.selectFrom({
+                tableName: this.name,
+                arrayOfFields: ["count(rate)"],
+                statementConditions: [
+                  _conditionTypes.equal({
+                    key: { keyValue: "onerate.movie_id" },
+                    value: { valueValue: "moviereview.id" },
+                  }),
+                ],
+                nullable: false,
+                semicolon: false,
+              }),
+            },
+          }),
+        ],
+
+        statementConditions: [
+          _conditionTypes.equal({
+            key: { keyValue: "moviereview.id" },
+            value: { valueValue: "new.movie_id" },
+          }),
+        ],
+      }),
+    }),
+
+    _statementTypes.trigger({
       triggerName: `${this.name}2`,
       event: "AFTER INSERT",
       triggerTable: this.name,
-      action: this._statementTypes.update({
+      action: _statementTypes.update({
         tableName: "MovieReview",
         statementFieldForUpdate: [
-          `averageRateScore=${this._statementTypes.select({
-            tableName: this.name,
-            arrayOfFields: ["avg(rate)"],
-            statementConditions: ["onerate.movie_id=moviereview.id"],
-            nullable: false,
-            semicolon: false,
-          })}`,
-          `numberOfRate=${this._statementTypes.select({
-            tableName: this.name,
-            arrayOfFields: ["count(rate)"],
-            statementConditions: ["onerate.movie_id=moviereview.id"],
-            nullable: false,
-            semicolon: false,
-          })}`,
+          _updateTypes.equal({
+            key: { keyValue: "averageRateScore" },
+            value: {
+              valueValue: _statementTypes.selectFrom({
+                tableName: this.name,
+                arrayOfFields: ["avg(rate)"],
+                statementConditions: [
+                  _conditionTypes.equal({
+                    key: { keyValue: "onerate.movie_id" },
+                    value: { valueValue: "moviereview.id" },
+                  }),
+                ],
+                nullable: false,
+                semicolon: false,
+              }),
+            },
+          }),
+          _updateTypes.equal({
+            key: { keyValue: "numberOfRate" },
+            value: {
+              valueValue: _statementTypes.selectFrom({
+                tableName: this.name,
+                arrayOfFields: ["count(rate)"],
+                statementConditions: [
+                  _conditionTypes.equal({
+                    key: { keyValue: "onerate.movie_id" },
+                    value: { valueValue: "moviereview.id" },
+                  }),
+                ],
+                nullable: false,
+                semicolon: false,
+              }),
+            },
+          }),
         ],
-        statementConditions: ["moviereview.id=new.movie_id"],
+        statementConditions: [
+          _conditionTypes.equal({
+            key: { keyValue: "moviereview.id" },
+            value: { valueValue: "new.movie_id" },
+          }),
+        ],
       }),
-    },
+    }),
 
-    {
+    _statementTypes.trigger({
       triggerName: `${this.name}3`,
-      event: "AFTER DELETE",
       triggerTable: this.name,
-      action: this._statementTypes.update({
+      event: "AFTER DELETE",
+      action: _statementTypes.update({
         tableName: "MovieReview",
         statementFieldForUpdate: [
-          `averageRateScore=${this._statementTypes.select({
-            tableName: this.name,
-            arrayOfFields: ["avg(rate)"],
-            statementConditions: ["movie_id=moviereview.id"],
-            nullable: false,
-            semicolon: false,
-          })}`,
-          `numberOfRate=${this._statementTypes.select({
-            tableName: this.name,
-            arrayOfFields: ["count(rate)"],
-            statementConditions: ["movie_id=moviereview.id"],
-            nullable: false,
-            semicolon: false,
-          })}`,
+          _updateTypes.equal({
+            key: { keyValue: "averageRateScore" },
+            value: {
+              valueValue: _statementTypes.selectFrom({
+                tableName: this.name,
+                arrayOfFields: ["avg(rate)"],
+                statementConditions: [
+                  _conditionTypes.equal({
+                    key: { keyValue: "movie_id" },
+                    value: { valueValue: "moviereview.id" },
+                  }),
+                ],
+                nullable: false,
+                semicolon: false,
+              }),
+            },
+          }),
+          _updateTypes.equal({
+            key: { keyValue: "numberOfRate" },
+            value: {
+              valueValue: _statementTypes.selectFrom({
+                tableName: this.name,
+                arrayOfFields: ["count(rate)"],
+                statementConditions: [
+                  _conditionTypes.equal({
+                    key: { keyValue: "movie_id" },
+                    value: { valueValue: "moviereview.id" },
+                  }),
+                ],
+                nullable: false,
+                semicolon: false,
+              }),
+            },
+          }),
         ],
-        statementConditions: ["moviereview.id=old.movie_id"],
+        statementConditions: [
+          _conditionTypes.equal({
+            key: { keyValue: "moviereview.id" },
+            value: { valueValue: "old.movie_id" },
+          }),
+        ],
       }),
-    },
+    }),
   ];
 };

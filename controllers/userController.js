@@ -1,4 +1,4 @@
-const {User} = require("../models");
+const { User } = require("../models");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -39,13 +39,13 @@ exports.signUp = async (req, res) => {
 
     const hashPassword = await bcrypt.hash(password, 10);
 
-    const user_id = (await User.create({ username, password: hashPassword }))[0]
-      ?.insertId;
+    const user = await User.create({ username, password: hashPassword });
 
-    if (!user_id)
-      return res.status(400).json({ message: "User Creation Fail" });
+    console.log(user);
 
-    const { accessToken, refreshToken } = createTokens(user_id);
+    if (!user) return res.status(400).json({ message: "User Creation Fail" });
+
+    const { accessToken, refreshToken } = createTokens(user.id);
     res
       .status(200)
       .cookie("refreshToken", refreshToken, {
@@ -63,7 +63,7 @@ exports.login = async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ conditionObj: { username } });
     if (!user) return res.status(400).json({ message: "User Not Found" });
 
     const isPasswordValid = await bcrypt.compare(
@@ -107,7 +107,7 @@ exports.refreshToken = async (req, res) => {
     if (!isRefreshTokenValid) {
       return res.status(400).json({ message: "Invalid Token" });
     }
-    const {user_id} = jwt.decode(refreshToken)
+    const { user_id } = jwt.decode(refreshToken);
 
     const { accessToken } = createTokens(user_id);
     res.status(200).json({ message: "success", accessToken });
