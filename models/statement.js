@@ -576,8 +576,7 @@ class Select {
     if (checkArrayNull([column])) throw new Error("column cant be null");
 
     if (!Array.isArray(this.#conditionData)) this.#conditionData = [];
-    if (ifNullThen != null && !forCombineFunction)
-      this.#conditionData.push(`${column}='${value}'`);
+    this.#conditionData.push(`${column}='${value}'`);
 
     return this;
   };
@@ -625,16 +624,21 @@ class Select {
     return this;
   };
 
-  static condition_findArrayOfNumberAndStringInJson = ({
+  static condition_findArrayOfStringInJson = ({
     column,
     values,
     AND_OR = "AND",
   }) => {
-    if (values == null || !Array.isArray(values))
+    // if (column == null ||values == null || !Array.isArray(values))
+    //   throw new Error("values cant be null, values must be array");
+
+    if (column == null)
       throw new Error("values cant be null, values must be array");
 
+    if (!values || (Array.isArray(values) && values.length == 0)) return this;
+
     values?.forEach((value, index) => {
-      this.findStringInJson({ column, value });
+      this.condition_findStringInJson({ column, value });
     });
 
     return this;
@@ -646,7 +650,7 @@ class Select {
     // StringInvalidCharsError(value);
 
     if (!Array.isArray(this.#conditionData)) this.#conditionData = [];
-    this.#conditionData.push(`${key} LIKE '%${value}%'`);
+    this.#conditionData.push(`${column} LIKE '%${value}%'`);
 
     return this;
   };

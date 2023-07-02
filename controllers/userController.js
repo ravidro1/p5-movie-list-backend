@@ -53,7 +53,7 @@ exports.signUp = async (req, res) => {
         expires: new Date(Date.now() + 900000),
         httpOnly: true,
       })
-      .json({ message: "success", accessToken: accessToken });
+      .json({ message: "success", accessToken: accessToken, id: user.id });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -77,7 +77,7 @@ exports.login = async (req, res) => {
     res
       .status(200)
       .cookie("refreshToken", refreshToken)
-      .json({ message: "success", accessToken: accessToken });
+      .json({ message: "success", accessToken: accessToken, id: user.id });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -110,7 +110,7 @@ exports.refreshToken = async (req, res) => {
     const { user_id } = jwt.decode(refreshToken);
 
     const { accessToken } = createTokens(user_id);
-    res.status(200).json({ message: "success", accessToken });
+    res.status(200).json({ message: "success", accessToken, id: user_id });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

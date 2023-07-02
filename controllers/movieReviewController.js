@@ -1,6 +1,7 @@
 const { uploadImage, deleteImage } = require("../cloudinary");
+const database = require("../database");
 const { MovieReview } = require("../models");
-const { _updateTypes } = require("../models/Models.Types");
+const { Select } = require("../models/statement");
 
 // []
 exports.getAllMovieReviews = async (req, res) => {
@@ -37,8 +38,6 @@ exports.getMovieReviewsByIndexes = async (req, res) => {
 // [movieName]
 exports.createMovie = async (req, res) => {
   try {
-    // console.log(req.body);
-
     const regexPattern = /[^A-Za-z0-9]/g;
 
     const { name, description, releaseDate, categories, image } = req.body;
@@ -82,25 +81,37 @@ exports.deleteMovie = async (req, res) => {
   }
 };
 
+// const movies = await MovieReview.find({
+//   conditionObj:{}
+// statementConditions: [
+//   MovieReview._conditionTypes.findArrayInJson({
+//     field: "categories",
+//     values: categories,
+//   }),
+//   MovieReview._conditionTypes.isIncludesString({
+//     key: "name",
+//     value: name,
+//   }),
+// ],
+//   limit: 20,
+// });
+
 // [name?, categories?]
 exports.searchMovieReviewsByNameAndCategories = async (req, res) => {
   try {
     const { name, categories } = req.body;
     console.log(name, categories, 1);
 
-    const movies = await MovieReview.find({
-      statementConditions: [
-        MovieReview._conditionTypes.findArrayInJson({
-          field: "categories",
-          values: categories,
-        }),
-        MovieReview._conditionTypes.isIncludesString({
-          key: "name",
-          value: name,
-        }),
-      ],
-      limit: 20,
-    });
+    const statement = Select.table("MovieReview")
+      .condition_findArrayOfStringInJson({
+        column: "categories",
+        values: categories,
+      })
+      .condition_isIncludesString({ column: "name", value: name })
+      .limit(20)
+      .selectEnd();
+
+    const movies = (await database.execute(statement))[0];
 
     res.status(200).json({ message: "success", movieReviewsList: movies });
   } catch (error) {
@@ -112,7 +123,6 @@ exports.searchMovieReviewsByNameAndCategories = async (req, res) => {
 // [ id, name, categories?, description?, releaseDate?]
 exports.updateMovie = async (req, res) => {
   try {
-    console.log(req.body);
     const { id, name, categories, description, releaseDate, image } = req.body;
 
     let imageUrl = null;

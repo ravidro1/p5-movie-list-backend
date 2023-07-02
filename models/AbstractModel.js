@@ -1,10 +1,6 @@
 const database = require("../database");
 
-const {
-  _fieldsDataTypes,
-  _statementTypes,
-  _conditionTypes,
-} = require("./Models.Types");
+const { _fieldsDataTypes } = require("./Models.Types");
 const { Select, Update, Insert, Delete, Trigger } = require("./statement");
 
 const generateField = (fieldRules) => {
@@ -111,16 +107,18 @@ module.exports = class AbstractModel {
   }
 
   static async create(values) {
-    console.log(values);
-
     const statement = Insert.table(this.name)
       .keysAndValueObj(values)
       .endInsert();
 
-    // const statement = _statementTypes.insert({
-    //   tableName: this.name,
-    //   values,
-    // });
+    const res = await database.execute(statement);
+    return this.findById(res[0].insertId);
+  }
+
+  static async createOrUpdate(values) {
+    const statement = Insert.table(this.name)
+      .keysAndValueObj(values)
+      .endInsert(true, "REPLACE");
 
     const res = await database.execute(statement);
     return this.findById(res[0].insertId);
@@ -142,13 +140,6 @@ module.exports = class AbstractModel {
   }
 
   static async find({ conditionObj, limit }) {
-    // const statement = _statementTypes.selectFrom({
-    //   tableName: this.name,
-    //   objConditions: conditionObj,
-    //   statementConditions,
-    //   limit,
-    // });
-
     const statement = Select.table(this.name)
       .condition_obj(conditionObj)
       .limit(limit)
@@ -158,13 +149,6 @@ module.exports = class AbstractModel {
   }
 
   static async findOne({ conditionObj }) {
-    // const statement = _statementTypes.selectFrom({
-    //   tableName: this.name,
-    //   objConditions: conditionObj,
-    //   statementConditions,
-    //   limit: 1,
-    // });
-
     const statement = Select.table(this.name)
       .condition_obj(conditionObj)
       .limit(1)
@@ -179,27 +163,11 @@ module.exports = class AbstractModel {
       .update_obj(updateFields)
       .endUpdate();
 
-    // const statement = _statementTypes.update({
-    //   statementFieldForUpdate,
-    //   tableName: this.name,
-    //   objFieldForUpdate: updateFields,
-    //   objConditions: conditionObj,
-    //   statementConditions,
-    // });
     await database.execute(statement);
     // const statement2 = Select.table(this.name).condition_columnInArrayOfValues().selectEnd();
   }
 
   static async updateOne({ conditionObj, updateFields }) {
-    // const statement = _statementTypes.update({
-    //   tableName: this.name,
-    //   objFieldForUpdate: updateFields,
-    //   objConditions: conditionObj,
-    //   statementConditions,
-    //   statementFieldForUpdate,
-    //   limit: 1,
-    // });
-
     const statement = Update.table(this.name)
       .condition_obj(conditionObj)
       .update_obj(updateFields)
@@ -210,14 +178,6 @@ module.exports = class AbstractModel {
   }
 
   static async updateById({ id, updateFields }) {
-    // const statement = _statementTypes.update({
-    //   tableName: this.name,
-    //   objFieldForUpdate: updateFields,
-    //   objConditions: { id },
-    //   limit: 1,
-    //   statementFieldForUpdate,
-    // });
-
     const statement = Update.table(this.name)
       .condition_equalNotString({ column: "id", value: id })
       .update_obj(updateFields)
@@ -263,12 +223,6 @@ module.exports = class AbstractModel {
   }
 
   static async deleteOne(conditionObj) {
-    // const statement = _statementTypes.delete({
-    //   tableName: this.name,
-    //   objConditions: conditionObj,
-    //   limit: 1,
-    // });
-
     const statement = Delete.table(this.name)
       .condition_obj(conditionObj)
       .limit(1)

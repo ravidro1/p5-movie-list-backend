@@ -18,11 +18,12 @@ router.post(
   searchMovieReviewsByNameAndCategories
 );
 
-router.post("/createMovie", createMovie);
-router.post("/deleteMovie", deleteMovie);
-router.post("/updateMovie", updateMovie);
+router.post("/createMovie", isTokenVerify, createMovie);
+router.post("/deleteMovie", isTokenVerify, deleteMovie);
+router.post("/updateMovie", isTokenVerify, updateMovie);
 
-// router.post("/createMovie", isTokenVerify, createMovie);
-// router.post("/deleteMovie", isTokenVerify, deleteMovie);
+// router.post("/createMovie", createMovie);
+// router.post("/deleteMovie", deleteMovie);
+// router.post("/updateMovie", updateMovie);
 
 module.exports = router;

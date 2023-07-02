@@ -8,6 +8,8 @@ const PORT = process.env.PORT;
 const { User, MovieReview, OneRate } = require("./models");
 const userRoutes = require("./routes/userRoutes");
 const movieReviewRoutes = require("./routes/movieReviewRoutes");
+const oneRateRoutes = require("./routes/oneRateRoutes");
+
 const { main2 } = require("./models/statement");
 
 app.use(express.json());
@@ -17,7 +19,6 @@ async function registerTable() {
   await User.registerTable();
   await MovieReview.registerTable();
   await OneRate.registerTable();
-  // MovieReview.update({ updateFields: { description: "432" } });
 }
 
 async function main() {
@@ -39,11 +40,10 @@ async function main() {
 
   app.use("/user", userRoutes);
   app.use("/movieReview", movieReviewRoutes);
+  app.use("/oneRate", oneRateRoutes);
 
   app.listen(PORT, () => console.log("Listen To Port: ", PORT));
 }
 
 main();
 main2();
-// console.log(cloudinary.config());
-// cloudinary.
