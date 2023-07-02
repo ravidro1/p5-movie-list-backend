@@ -1,10 +1,6 @@
 const AbstractModel = require("./AbstractModel");
-const {
-  _fieldsDataTypes,
-  _statementTypes,
-  _updateTypes,
-  _conditionTypes,
-} = require("./Models.Types");
+const { _fieldsDataTypes } = require("./Models.Types");
+const { Trigger, Update, Select } = require("./statement");
 
 module.exports = class OneRate extends AbstractModel {
   static fields = {
@@ -53,159 +49,103 @@ module.exports = class OneRate extends AbstractModel {
   };
 
   static triggers = [
-    _statementTypes.trigger({
-      triggerName: `${this.name}1`,
-      event: "AFTER UPDATE",
-      triggerTable: this.name,
-      action: _statementTypes.update({
-        tableName: "MovieReview",
-        statementFieldForUpdate: [
-          _updateTypes.equal({
-            key: { keyValue: "averageRateScore" },
-            value: {
-              valueValue: _statementTypes.selectFrom({
-                tableName: this.name,
-                arrayOfFields: ["avg(rate)"],
-                statementConditions: [
-                  _conditionTypes.equal({
-                    key: { keyValue: "onerate.movie_id" },
-                    value: { valueValue: "moviereview.id" },
-                  }),
-                ],
-                nullable: false,
-                semicolon: false,
-              }),
-            },
-          }),
+    Trigger.table(this.name)
+      .triggerEvent("AFTER UPDATE")
+      .triggerName(`${this.name}1`)
+      .triggerAction(
+        Update.table("MovieReview")
+          .condition_equalNotString({
+            column: "moviereview.id",
+            value: "new.movie_id",
+          })
+          .update_equalNotString({
+            column: "averageRateScore",
+            value: Select.table(this.name)
+              .field_avg({ column: "rate", ifNullThen: 0 })
+              .condition_equalNotString({
+                column: "onerate.movie_id",
+                value: "moviereview.id",
+              })
+              .selectEnd(false),
+          })
+          .update_equalNotString({
+            column: "numberOfRate",
+            value: Select.table(this.name)
+              .field_count({ column: "rate", ifNullThen: 0 })
+              .condition_equalNotString({
+                column: "onerate.movie_id",
+                value: "moviereview.id",
+              })
+              .selectEnd(false),
+          })
+          .endUpdate()
+      )
+      .triggerEnd(),
 
-          _updateTypes.equal({
-            key: { keyValue: "numberOfRate" },
-            value: {
-              valueValue: _statementTypes.selectFrom({
-                tableName: this.name,
-                arrayOfFields: ["count(rate)"],
-                statementConditions: [
-                  _conditionTypes.equal({
-                    key: { keyValue: "onerate.movie_id" },
-                    value: { valueValue: "moviereview.id" },
-                  }),
-                ],
-                nullable: false,
-                semicolon: false,
-              }),
-            },
-          }),
-        ],
+    Trigger.table(this.name)
+      .triggerEvent("AFTER INSERT")
+      .triggerName(`${this.name}2`)
+      .triggerAction(
+        Update.table("MovieReview")
+          .condition_equalNotString({
+            column: "moviereview.id",
+            value: "new.movie_id",
+          })
+          .update_equalNotString({
+            column: "averageRateScore",
+            value: Select.table(this.name)
+              .field_avg({ column: "rate", ifNullThen: 0 })
+              .condition_equalNotString({
+                column: "onerate.movie_id",
+                value: "moviereview.id",
+              })
+              .selectEnd(false),
+          })
+          .update_equalNotString({
+            column: "numberOfRate",
+            value: Select.table(this.name)
+              .field_count({ column: "rate", ifNullThen: 0 })
+              .condition_equalNotString({
+                column: "onerate.movie_id",
+                value: "moviereview.id",
+              })
+              .selectEnd(false),
+          })
+          .endUpdate()
+      )
+      .triggerEnd(),
 
-        statementConditions: [
-          _conditionTypes.equal({
-            key: { keyValue: "moviereview.id" },
-            value: { valueValue: "new.movie_id" },
-          }),
-        ],
-      }),
-    }),
-
-    _statementTypes.trigger({
-      triggerName: `${this.name}2`,
-      event: "AFTER INSERT",
-      triggerTable: this.name,
-      action: _statementTypes.update({
-        tableName: "MovieReview",
-        statementFieldForUpdate: [
-          _updateTypes.equal({
-            key: { keyValue: "averageRateScore" },
-            value: {
-              valueValue: _statementTypes.selectFrom({
-                tableName: this.name,
-                arrayOfFields: ["avg(rate)"],
-                statementConditions: [
-                  _conditionTypes.equal({
-                    key: { keyValue: "onerate.movie_id" },
-                    value: { valueValue: "moviereview.id" },
-                  }),
-                ],
-                nullable: false,
-                semicolon: false,
-              }),
-            },
-          }),
-          _updateTypes.equal({
-            key: { keyValue: "numberOfRate" },
-            value: {
-              valueValue: _statementTypes.selectFrom({
-                tableName: this.name,
-                arrayOfFields: ["count(rate)"],
-                statementConditions: [
-                  _conditionTypes.equal({
-                    key: { keyValue: "onerate.movie_id" },
-                    value: { valueValue: "moviereview.id" },
-                  }),
-                ],
-                nullable: false,
-                semicolon: false,
-              }),
-            },
-          }),
-        ],
-        statementConditions: [
-          _conditionTypes.equal({
-            key: { keyValue: "moviereview.id" },
-            value: { valueValue: "new.movie_id" },
-          }),
-        ],
-      }),
-    }),
-
-    _statementTypes.trigger({
-      triggerName: `${this.name}3`,
-      triggerTable: this.name,
-      event: "AFTER DELETE",
-      action: _statementTypes.update({
-        tableName: "MovieReview",
-        statementFieldForUpdate: [
-          _updateTypes.equal({
-            key: { keyValue: "averageRateScore" },
-            value: {
-              valueValue: _statementTypes.selectFrom({
-                tableName: this.name,
-                arrayOfFields: ["avg(rate)"],
-                statementConditions: [
-                  _conditionTypes.equal({
-                    key: { keyValue: "movie_id" },
-                    value: { valueValue: "moviereview.id" },
-                  }),
-                ],
-                nullable: false,
-                semicolon: false,
-              }),
-            },
-          }),
-          _updateTypes.equal({
-            key: { keyValue: "numberOfRate" },
-            value: {
-              valueValue: _statementTypes.selectFrom({
-                tableName: this.name,
-                arrayOfFields: ["count(rate)"],
-                statementConditions: [
-                  _conditionTypes.equal({
-                    key: { keyValue: "movie_id" },
-                    value: { valueValue: "moviereview.id" },
-                  }),
-                ],
-                nullable: false,
-                semicolon: false,
-              }),
-            },
-          }),
-        ],
-        statementConditions: [
-          _conditionTypes.equal({
-            key: { keyValue: "moviereview.id" },
-            value: { valueValue: "old.movie_id" },
-          }),
-        ],
-      }),
-    }),
+    Trigger.table(this.name)
+      .triggerEvent("AFTER DELETE")
+      .triggerName(`${this.name}3`)
+      .triggerAction(
+        Update.table("MovieReview")
+          .condition_equalNotString({
+            column: "moviereview.id",
+            value: "old.movie_id",
+          })
+          .update_equalNotString({
+            column: "averageRateScore",
+            value: Select.table(this.name)
+              .field_avg({ column: "rate", ifNullThen: 0 })
+              .condition_equalNotString({
+                column: "movie_id",
+                value: "moviereview.id",
+              })
+              .selectEnd(false),
+          })
+          .update_equalNotString({
+            column: "numberOfRate",
+            value: Select.table(this.name)
+              .field_count({ column: "rate", ifNullThen: 0 })
+              .condition_equalNotString({
+                column: "movie_id",
+                value: "moviereview.id",
+              })
+              .selectEnd(false),
+          })
+          .endUpdate()
+      )
+      .triggerEnd(),
   ];
 };

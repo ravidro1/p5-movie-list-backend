@@ -9,10 +9,12 @@ const _fieldsDataTypes = {
   string: (size) => `VARCHAR(${size})`,
   int: "INT",
   float: "FLOAT",
-  date: "TIMESTAMP",
-  date_create: "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-  date_update:
+  date: "DATE",
+  date_timestamp: "TIMESTAMP",
+  date_timestamp_create: "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+  date_timestamp_update:
     "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+  boolean: "BOOLEAN",
 };
 
 const _conditionTypes = {
@@ -198,11 +200,20 @@ const _selectFieldTypes = {
   avg: (field) => {
     return `AVG(${field})`;
   },
+  sum: (field) => {
+    return `SUM(${field})`;
+  },
   count: (field) => {
     return `COUNT(${field})`;
   },
   lower: (field) => {
     return `LOWER(${field})`;
+  },
+  upper: (field) => {
+    return `UPPER(${field})`;
+  },
+  reverse: (field) => {
+    return `REVERSE(${field})`;
   },
   regexReplace: ({ field, from, to }) => {
     return `REGEXP_REPLACE(${field},"${from}","${to}")`;
@@ -228,9 +239,12 @@ const generateConditions = (
   if (objConditions) {
     Object.keys(objConditions).forEach((key, index) => {
       StringInvalidCharsError(objConditions[key]);
+      if (objConditions[key] == null) return;
+
       conditionsArray.push(`${key}='${objConditions[key]}'`);
     });
   }
+  // undefined
 
   let conditionsStatement = "";
 
@@ -251,12 +265,12 @@ const generateUpdateFields = (
   statementFieldForUpdate = null
 ) => {
   let updateFieldsArray = [];
-  if (Array.isArray(statementFieldForUpdate))
-    updateFieldsArray = [...statementFieldForUpdate];
+  if (Array.isArray()) updateFieldsArray = [...statementFieldForUpdate];
 
   if (objFieldForUpdate) {
     Object.keys(objFieldForUpdate).forEach((key) => {
       StringInvalidCharsError(objFieldForUpdate[key]);
+      if (objFieldForUpdate[key] == null) return;
       updateFieldsArray.push(`${key}='${objFieldForUpdate[key]}'`);
     });
   }

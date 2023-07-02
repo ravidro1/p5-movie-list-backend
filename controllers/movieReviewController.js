@@ -1,10 +1,12 @@
-const database = require("../database");
+const { uploadImage, deleteImage } = require("../cloudinary");
 const { MovieReview } = require("../models");
+const { _updateTypes } = require("../models/Models.Types");
 
 // []
 exports.getAllMovieReviews = async (req, res) => {
   try {
     const movieReviewsList = await MovieReview.findAll();
+    console.log(movieReviewsList);
     res.status(200).json({ message: "success", movieReviewsList });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -35,17 +37,28 @@ exports.getMovieReviewsByIndexes = async (req, res) => {
 // [movieName]
 exports.createMovie = async (req, res) => {
   try {
+    // console.log(req.body);
+
     const regexPattern = /[^A-Za-z0-9]/g;
 
-    const { name, description, releaseDate, categories } = req.body;
-    const normalizeName = name.toLowerCase().replace(regexPattern, "");
+    const { name, description, releaseDate, categories, image } = req.body;
+    // const normalizeName = name.toLowerCase().replace(regexPattern, "");
 
     const newMovie = await MovieReview.create({
       name: name,
-      normalizeName,
+      // normalizeName,
       description,
       releaseDate,
       categories: JSON.stringify(categories),
+      pictureURL: null,
+    });
+
+    let imageUrl = null;
+    if (image) imageUrl = await uploadImage(image, newMovie.id);
+
+    await MovieReview.updateById({
+      id: newMovie.id,
+      updateFields: { pictureURL: imageUrl },
     });
 
     if (!newMovie) return res.status(400).json({ message: "fail" });
@@ -62,6 +75,7 @@ exports.deleteMovie = async (req, res) => {
     const { movie_id } = req.body;
     const deletedMovie = await MovieReview.deleteById(movie_id);
     if (!deletedMovie) return res.status(400).json({ message: "fail" });
+    await deleteImage(movie_id);
     res.status(200).json({ message: "success", deletedMovie });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -95,15 +109,38 @@ exports.searchMovieReviewsByNameAndCategories = async (req, res) => {
   }
 };
 
-// []
+// [ id, name, categories?, description?, releaseDate?]
 exports.updateMovie = async (req, res) => {
   try {
-    const { name, categories, description, releaseDate } = req.body;
     console.log(req.body);
+    const { id, name, categories, description, releaseDate, image } = req.body;
 
-    res.status(200).json({ message: "success", movieReviewsList: movies });
+    let imageUrl = null;
+    if (image) imageUrl = await uploadImage(image, id);
+    else await deleteImage(id);
+
+    const releaseDateAfterNullCheck = releaseDate
+      ?.toString()
+      .replace("T", " ")
+      .replace("Z", "")
+      ? releaseDate?.toString().replace("T", " ").replace("Z", "")
+      : null;
+
+    const editedMovie = await MovieReview.updateById({
+      id,
+      updateFields: {
+        name,
+        categories: JSON.stringify(categories),
+        description,
+        releaseDate: releaseDateAfterNullCheck,
+        pictureURL: imageUrl,
+      },
+    });
+
+    console.log(editedMovie);
+    res.status(200).json({ message: "success", editedMovie });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error });
   }
 };

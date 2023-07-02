@@ -1,10 +1,6 @@
 const AbstractModel = require("./AbstractModel");
-const {
-  _fieldsDataTypes,
-  _updateTypes,
-  _statementTypes,
-  _selectFieldTypes,
-} = require("./Models.Types");
+const { _fieldsDataTypes } = require("./Models.Types");
+const { Trigger, Update, Select } = require("./statement");
 
 module.exports = class MovieReview extends AbstractModel {
   static fields = {
@@ -38,67 +34,70 @@ module.exports = class MovieReview extends AbstractModel {
     description: { name: "description", type: _fieldsDataTypes.string(4000) },
     categories: { name: "categories", type: _fieldsDataTypes.json },
     releaseDate: { name: "releaseDate", type: _fieldsDataTypes.date },
+    pictureURL: { name: "pictureURL", type: _fieldsDataTypes.string(4000) },
   };
 
   static rules = {};
 
   static triggers = [
-    _statementTypes.trigger({
-      triggerName: `${this.name}1`,
-      event: "BEFORE INSERT",
-      triggerTable: this.name,
-      action: _statementTypes.update({
-        tableName: this.name,
-        withUpdateWord: false,
-        statementFieldForUpdate: [
-          _updateTypes.equal({
-            key: { keyValue: "new.normalizeName" },
-            value: {
-              valueValue: _statementTypes.select({
-                semicolon: false,
-                formatFields: [
-                  _selectFieldTypes.lower(
-                    _selectFieldTypes.regexReplace({
-                      field: "new.name",
-                      from: "[^0-9a-zA-Z ]",
-                      to: "",
-                    })
-                  ),
+    Trigger.table(this.name)
+      .triggerEvent("BEFORE INSERT")
+      .triggerName(`${this.name}1`)
+      .triggerAction(
+        Update.table(this.name)
+          .update_equalNotString({
+            column: "new.normalizeName",
+            value: Select.table(this.name)
+              .field_combine({
+                column: "new.name",
+                arrayOfFunctions: [
+                  Select.field_lower({
+                    forCombineFunction: true,
+                    column: "new.name",
+                  }),
+                  Select.field_regexReplace({
+                    forCombineFunction: true,
+                    column: "new.name",
+                    from: "[^0-9a-zA-Z ]",
+                    to: "",
+                  }),
                 ],
-              }),
-            },
-          }),
-        ],
-      }),
-    }),
+              })
+              .condition_equalNotString({ column: "id", value: "new.id" })
+              .selectEnd(false),
+          })
+          .endUpdate(true, false)
+      )
+      .triggerEnd(),
 
-    _statementTypes.trigger({
-      triggerName: `${this.name}2`,
-      event: "BEFORE UPDATE",
-      triggerTable: this.name,
-      action: _statementTypes.update({
-        tableName: this.name,
-        withUpdateWord: false,
-        statementFieldForUpdate: [
-          _updateTypes.equal({
-            key: { keyValue: "new.normalizeName" },
-            value: {
-              valueValue: _statementTypes.select({
-                semicolon: false,
-                formatFields: [
-                  _selectFieldTypes.lower(
-                    _selectFieldTypes.regexReplace({
-                      field: "new.name",
-                      from: "[^0-9a-zA-Z ]",
-                      to: "",
-                    })
-                  ),
+    Trigger.table(this.name)
+      .triggerEvent("BEFORE UPDATE")
+      .triggerName(`${this.name}2`)
+      .triggerAction(
+        Update.table(this.name)
+          .update_equalNotString({
+            column: "new.normalizeName",
+            value: Select.table(this.name)
+              .field_combine({
+                column: "new.name",
+                arrayOfFunctions: [
+                  Select.field_lower({
+                    forCombineFunction: true,
+                    column: "new.name",
+                  }),
+                  Select.field_regexReplace({
+                    forCombineFunction: true,
+                    column: "new.name",
+                    from: "[^0-9a-zA-Z ]",
+                    to: "",
+                  }),
                 ],
-              }),
-            },
-          }),
-        ],
-      }),
-    }),
+              })
+              .condition_equalNotString({ column: "id", value: "new.id" })
+              .selectEnd(false),
+          })
+          .endUpdate(true, false)
+      )
+      .triggerEnd(),
   ];
 };

@@ -25,7 +25,7 @@ const StringInvalidCharsError = (stringValue) => {
   if (typeof stringValue != "string") return;
 
   if (
-    !/^[$A-Za-z0-9=;_.-\s,()"^\[\]]*$/.test(stringValue) ||
+    !/^[$A-Za-z0-9=/:;_.-\s,()"^\[\]]*$/.test(stringValue) ||
     stringValue.includes("--")
   )
     throw new Error(`Contain Invalid Chars: ${stringValue}`);
