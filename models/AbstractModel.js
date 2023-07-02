@@ -108,6 +108,7 @@ module.exports = class AbstractModel {
   }
 
   static async create(values) {
+    console.log(Insert);
     const statement = Insert.table(this.name)
       .keysAndValueObj(values)
       .endInsert();
