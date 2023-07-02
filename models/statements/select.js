@@ -1,19 +1,18 @@
 const { checkArrayNull } = require("../../globalFunctions");
+const Condition = require("./conditions");
 
-class Select {
-  static #fieldsData = null;
-  static #tableNameData = null;
-  static #conditionData = null;
-  static #limitData = null;
-  static #orderByData = null;
+class Select extends Condition {
+  #fieldsData = null;
+  #tableNameData = null;
+  #limitData = null;
+  #orderByData = null;
 
-  //   static fields = (fields) => {
-  //     this.#fieldsData = fields;
-  //     return this;
-  //   };
+  constructor() {
+    super();
+  }
 
   // start fields //
-  static field_between = ({
+  field_between = ({
     column,
     firstCell,
     lastCell,
@@ -37,7 +36,7 @@ class Select {
     return `${column} BETWEEN ${firstCell} AND ${lastCell}`;
   };
 
-  static field_normalColumnOrExpression = ({
+  field_normalColumnOrExpression = ({
     columnOrExpression,
     ifNullThen = null,
   }) => {
@@ -51,11 +50,7 @@ class Select {
     return this;
   };
 
-  static field_avg = ({
-    column,
-    forCombineFunction = false,
-    ifNullThen = null,
-  }) => {
+  field_avg = ({ column, forCombineFunction = false, ifNullThen = null }) => {
     if (checkArrayNull([column]))
       throw new Error("column, firstCell, lastCell cant be null");
 
@@ -69,11 +64,7 @@ class Select {
     return (columnPlace) => `AVG(${columnPlace})`;
   };
 
-  static field_sum = ({
-    column,
-    forCombineFunction = false,
-    ifNullThen = null,
-  }) => {
+  field_sum = ({ column, forCombineFunction = false, ifNullThen = null }) => {
     if (checkArrayNull([column]))
       throw new Error("column, firstCell, lastCell cant be null");
 
@@ -87,11 +78,7 @@ class Select {
     return (columnPlace) => `SUM(${columnPlace})`;
   };
 
-  static field_count = ({
-    column,
-    forCombineFunction = false,
-    ifNullThen = null,
-  }) => {
+  field_count = ({ column, forCombineFunction = false, ifNullThen = null }) => {
     if (checkArrayNull([column]))
       throw new Error("column, firstCell, lastCell cant be null");
 
@@ -105,11 +92,7 @@ class Select {
     return (columnPlace) => `COUNT(${columnPlace})`;
   };
 
-  static field_lower = ({
-    column,
-    forCombineFunction = false,
-    ifNullThen = null,
-  }) => {
+  field_lower = ({ column, forCombineFunction = false, ifNullThen = null }) => {
     if (checkArrayNull([column]))
       throw new Error("column, firstCell, lastCell cant be null");
 
@@ -123,11 +106,7 @@ class Select {
     return (columnPlace) => `LOWER(${columnPlace})`;
   };
 
-  static field_upper = ({
-    column,
-    forCombineFunction = false,
-    ifNullThen = null,
-  }) => {
+  field_upper = ({ column, forCombineFunction = false, ifNullThen = null }) => {
     if (checkArrayNull([column]))
       throw new Error("column, firstCell, lastCell cant be null");
 
@@ -141,7 +120,7 @@ class Select {
     return (columnPlace) => `UPPER(${columnPlace})`;
   };
 
-  static field_reverse = ({
+  field_reverse = ({
     column,
     forCombineFunction = false,
     ifNullThen = null,
@@ -159,7 +138,7 @@ class Select {
     return (columnPlace) => `REVERSE(${columnPlace})`;
   };
 
-  static field_regexReplace = ({
+  field_regexReplace = ({
     column,
     from,
     to,
@@ -182,7 +161,7 @@ class Select {
     return (columnPlace) => `REGEXP_REPLACE(${columnPlace},"${from}","${to}")`;
   };
 
-  static field_combine = ({ column, arrayOfFunctions, ifNullThen = null }) => {
+  field_combine = ({ column, arrayOfFunctions, ifNullThen = null }) => {
     if (checkArrayNull([column, arrayOfFunctions]))
       throw new Error("column, arrayOfFunctions cant be null");
 
@@ -202,127 +181,17 @@ class Select {
 
   // end fields //
 
-  // start conditions //
-
-  static condition_equalString = ({ column, value }) => {
-    if (checkArrayNull([column])) throw new Error("column cant be null");
-
-    if (!Array.isArray(this.#conditionData)) this.#conditionData = [];
-    this.#conditionData.push(`${column}='${value}'`);
-
-    return this;
-  };
-
-  static condition_equalNotString = ({ column, value }) => {
-    if (checkArrayNull([column])) throw new Error("column cant be null");
-
-    if (!Array.isArray(this.#conditionData)) this.#conditionData = [];
-    this.#conditionData.push(`${column}=(${value})`);
-
-    return this;
-  };
-
-  static condition_findStringInJson = ({ column, keyOfJson = null, value }) => {
-    if (checkArrayNull([column])) throw new Error("column cant be null");
-
-    // StringInvalidCharsError(value);
-
-    if (!Array.isArray(this.#conditionData)) this.#conditionData = [];
-    this.#conditionData.push(
-      `'${value}' MEMBER OF(${column}->> ${
-        keyOfJson ? `'$.${keyOfJson}'` : `'$'`
-      })`
-    );
-
-    return this;
-  };
-
-  static condition_findNumberOrStatementInJson = ({
-    column,
-    keyOfJson = null,
-    value,
-  }) => {
-    if (checkArrayNull([column])) throw new Error("column cant be null");
-
-    // StringInvalidCharsError(value);
-
-    if (!Array.isArray(this.#conditionData)) this.#conditionData = [];
-    this.#conditionData.push(
-      `${value} MEMBER OF(${column}->> ${
-        keyOfJson ? `'$.${keyOfJson}'` : `'$'`
-      })`
-    );
-
-    return this;
-  };
-
-  static condition_findArrayOfStringInJson = ({
-    column,
-    values,
-    AND_OR = "AND",
-  }) => {
-    // if (column == null ||values == null || !Array.isArray(values))
-    //   throw new Error("values cant be null, values must be array");
-
-    if (column == null)
-      throw new Error("values cant be null, values must be array");
-
-    if (!values || (Array.isArray(values) && values.length == 0)) return this;
-
-    values?.forEach((value, index) => {
-      this.condition_findStringInJson({ column, value });
-    });
-
-    return this;
-  };
-
-  static condition_isIncludesString = ({ column, value }) => {
-    if (checkArrayNull([column, value])) throw new Error("column cant be null");
-
-    // StringInvalidCharsError(value);
-
-    if (!Array.isArray(this.#conditionData)) this.#conditionData = [];
-    this.#conditionData.push(`${column} LIKE '%${value}%'`);
-
-    return this;
-  };
-
-  static condition_obj = (obj) => {
-    if (!obj) throw new Error("obj cant be null");
-
-    Object.keys(obj).forEach((key) => {
-      if (typeof obj[key] == "string")
-        this.condition_equalString({ column: key, value: obj[key] });
-      else this.condition_equalNotString({ column: key, value: obj[key] });
-    });
-
-    return this;
-  };
-
-  static condition_columnInArrayOfValues = (column, array, AND_OR) => {
-    if (!array) throw new Error("array cant be null");
-
-    let statement = `${column} IN (${array.toString()})`;
-    if (array.length > 0) {
-      if (!Array.isArray(this.#conditionData)) this.#conditionData = [];
-      this.#conditionData.push(statement);
-    }
-
-    return this;
-  };
-  // end conditions //
-
-  static table = (table) => {
+  table = (table) => {
     this.#tableNameData = table;
     return this;
   };
 
-  static limit = (limit) => {
+  limit = (limit) => {
     this.#limitData = limit;
     return this;
   };
 
-  static orderBy = ({ column, ASC_OR_DESC = "ASC" }) => {
+  orderBy = ({ column, ASC_OR_DESC = "ASC" }) => {
     if (checkArrayNull([column])) throw new Error("column cant be null");
 
     if (!Array.isArray(this.#orderByData)) this.#orderByData = [];
@@ -331,7 +200,7 @@ class Select {
     return this;
   };
 
-  static selectEnd = (isWithSemicolon = true) => {
+  selectEnd = (isWithSemicolon = true) => {
     const tableName = this.#tableNameData;
     const limit = this.#limitData;
     let fieldsStatement = null;
@@ -346,7 +215,7 @@ class Select {
 
     if (fieldsStatement == null) fieldsStatement = "*";
 
-    this.#conditionData?.map((condition, index) => {
+    this._conditionData?.map((condition, index) => {
       if (index == 0) conditionStatement = "";
       if (index > 0 && conditionStatement) conditionStatement += " AND ";
       conditionStatement += condition;
@@ -360,7 +229,7 @@ class Select {
 
     this.#fieldsData = null;
     this.#tableNameData = null;
-    this.#conditionData = null;
+    this._conditionData = null;
     this.#limitData = null;
     this.#orderByData = null;
 
@@ -370,20 +239,7 @@ class Select {
       orderByStatement ? `ORDER BY ${orderByStatement}` : ""
     } ${limit != null ? "LIMIT " + limit : ""} )${isWithSemicolon ? ";" : ""}`;
   };
-
-  //   static returnSelect = () => {
-  //     const tableName = this.#tableNameData;
-  //     const conditionStatement = this.#conditionData;
-  //     const limit = this.#limitData;
-  //     const fieldsData = this.#fieldsData;
-  //     const semicolon = null;
-
-  //     this.action = `SELECT ${fieldsData} FROM ${tableName}  ${
-  //       conditionStatement ? "WHERE " + conditionStatement : ""
-  //     } ${limit != null ? "LIMIT " + limit : ""} ${semicolon ? ";" : ""}`;
-
-  //     return this;
-  //   };
 }
 
-module.exports = { Select };
+const newSelect = new Select();
+module.exports = newSelect;

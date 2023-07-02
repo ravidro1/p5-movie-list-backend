@@ -9,7 +9,6 @@ const { User, MovieReview, OneRate } = require("./models");
 const userRoutes = require("./routes/userRoutes");
 const movieReviewRoutes = require("./routes/movieReviewRoutes");
 const oneRateRoutes = require("./routes/oneRateRoutes");
-const main2 = require("./test");
 
 app.use(express.json());
 app.use(cors({ credentials: true, origin: [process.env.FRONTEND_URL] }));
@@ -45,4 +44,3 @@ async function main() {
 }
 
 main();
-main2();

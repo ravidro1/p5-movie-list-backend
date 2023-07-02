@@ -1,9 +1,8 @@
-const { checkArrayNull } = require("./globalFunctions");
+const { checkArrayNull } = require("../../globalFunctions");
 
-class con {
-  _conditionData = null;
-
+class Condition {
   // start conditions //
+  _conditionData = null;
 
   condition_equalString = ({ column, value }) => {
     if (checkArrayNull([column])) throw new Error("column cant be null");
@@ -108,90 +107,6 @@ class con {
     return this;
   };
   // end conditions //
-
-  loadThis = () => {
-    return { ...se, ...this };
-  };
 }
 
-class se extends con {
-  constructor() {
-    super();
-  }
-  #fieldsData = null;
-  #tableNameData = null;
-  #limitData = null;
-  #orderByData = null;
-
-  table = (table) => {
-    this.#tableNameData = table;
-    return this;
-  };
-
-  limit = (limit) => {
-    this.#limitData = limit;
-    return this;
-  };
-
-  orderBy = ({ column, ASC_OR_DESC = "ASC" }) => {
-    if (checkArrayNull([column])) throw new Error("column cant be null");
-
-    if (!Array.isArray(this.#orderByData)) this.#orderByData = [];
-    this.#orderByData.push(`${column} ${ASC_OR_DESC}'`);
-
-    return this;
-  };
-
-  selectEnd = (isWithSemicolon = true) => {
-    const tableName = this.#tableNameData;
-    const limit = this.#limitData;
-    let fieldsStatement = null;
-    let conditionStatement = null;
-    let orderByStatement = null;
-
-    this.#fieldsData?.map((field, index) => {
-      if (index == 0) fieldsStatement = "";
-      if (index > 0 && fieldsStatement) fieldsStatement += ", ";
-      fieldsStatement += field;
-    });
-
-    if (fieldsStatement == null) fieldsStatement = "*";
-
-    this._conditionData?.map((condition, index) => {
-      if (index == 0) conditionStatement = "";
-      if (index > 0 && conditionStatement) conditionStatement += " AND ";
-      conditionStatement += condition;
-    });
-
-    this.#orderByData?.map((order, index) => {
-      if (index == 0) orderByStatement = "";
-      if (index > 0 && orderByStatement) orderByStatement += ", ";
-      orderByStatement += order;
-    });
-
-    this.#fieldsData = null;
-    this.#tableNameData = null;
-    this._conditionData = null;
-    this.#limitData = null;
-    this.#orderByData = null;
-
-    return `(SELECT ${fieldsStatement} ${
-      tableName ? `FROM ${tableName}` : ""
-    }  ${conditionStatement ? "WHERE " + conditionStatement : ""} ${
-      orderByStatement ? `ORDER BY ${orderByStatement}` : ""
-    } ${limit != null ? "LIMIT " + limit : ""} )${isWithSemicolon ? ";" : ""}`;
-  };
-}
-
-const main2 = () => {
-  //   const select = { ...new se(), ...con };
-  const ns = new se();
-  console.log(
-    // se.condition_equalNotString({ column: "ds", value: 1 })
-    // select.condition_equalString({ column: "dsad", value: "ds" }).selectEnd()
-    // select.condition_equalString({ column: "dsad", value: "dsada" }).selectEnd()
-    ns.condition_equalString({ column: "dsa", value: "das" }).selectEnd()
-  );
-};
-
-module.exports = main2;
+module.exports = Condition;

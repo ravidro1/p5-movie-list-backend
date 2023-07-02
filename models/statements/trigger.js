@@ -5,7 +5,6 @@ class Trigger {
   static #eventData = null;
   static #triggerTableData = null;
   static #actionData = null;
-  static #conditionData = null;
 
   //**************** start conditions ***************************//
   // static condition_equalString = ({ column, value }) => {
@@ -131,4 +130,4 @@ class Trigger {
   };
 }
 
-module.exports = {Trigger};
+module.exports = Trigger;

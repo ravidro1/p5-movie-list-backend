@@ -1,106 +1,19 @@
 const { checkArrayNull } = require("../../globalFunctions");
+const Condition = require("./conditions");
 
-class Update {
-  static #updateFieldsData = null;
-  static #tableNameData = null;
-  static #conditionData = null;
-  static #limitData = null;
+class Update extends Condition {
+  #updateFieldsData = null;
+  #tableNameData = null;
+  _conditionData = null;
+  #limitData = null;
 
-  //**************** start conditions ***************************//
-  static condition_equalString = ({ column, value }) => {
-    if (checkArrayNull([column])) throw new Error("column cant be null");
-
-    if (!Array.isArray(this.#conditionData)) this.#conditionData = [];
-    this.#conditionData.push(`${column}='${value}'`);
-
-    return this;
-  };
-
-  static condition_equalNotString = ({ column, value }) => {
-    if (checkArrayNull([column])) throw new Error("column cant be null");
-
-    if (!Array.isArray(this.#conditionData)) this.#conditionData = [];
-    this.#conditionData.push(`${column}=(${value})`);
-
-    return this;
-  };
-
-  static condition_findStringInJson = ({ column, keyOfJson = null, value }) => {
-    if (checkArrayNull([column])) throw new Error("column cant be null");
-
-    // StringInvalidCharsError(value);
-
-    if (!Array.isArray(this.#conditionData)) this.#conditionData = [];
-    this.#conditionData.push(
-      `'${value}' MEMBER OF(${column}->> ${
-        keyOfJson ? `'$.${keyOfJson}'` : `'$'`
-      })`
-    );
-
-    return this;
-  };
-
-  static condition_findNumberOrStatementInJson = ({
-    column,
-    keyOfJson = null,
-    value,
-  }) => {
-    if (checkArrayNull([column])) throw new Error("column cant be null");
-
-    // StringInvalidCharsError(value);
-
-    if (!Array.isArray(this.#conditionData)) this.#conditionData = [];
-    this.#conditionData.push(
-      `${value} MEMBER OF(${column}->> ${
-        keyOfJson ? `'$.${keyOfJson}'` : `'$'`
-      })`
-    );
-
-    return this;
-  };
-
-  static condition_findArrayOfNumberAndStringInJson = ({
-    column,
-    values,
-    AND_OR = "AND",
-  }) => {
-    if (values == null || !Array.isArray(values))
-      throw new Error("values cant be null, values must be array");
-
-    values?.forEach((value, index) => {
-      this.findStringInJson({ column, value });
-    });
-
-    return this;
-  };
-
-  static condition_isIncludesString = ({ column, value }) => {
-    if (checkArrayNull([column, value])) throw new Error("column cant be null");
-
-    // StringInvalidCharsError(value);
-
-    if (!Array.isArray(this.#conditionData)) this.#conditionData = [];
-    this.#conditionData.push(`${key} LIKE '%${value}%'`);
-
-    return this;
-  };
-
-  static condition_obj = (obj) => {
-    if (!obj) throw new Error("obj cant be null");
-
-    Object.keys(obj).forEach((key) => {
-      if (typeof obj[key] == "string")
-        this.condition_equalString({ column: key, value: obj[key] });
-      else this.condition_equalNotString({ column: key, value: obj[key] });
-    });
-
-    return this;
-  };
-  //**************** end conditions ***************************//
+  constructor() {
+    super();
+  }
 
   //**************** start updateFields ***************************//
 
-  static update_equalString = ({ column, value }) => {
+  update_equalString = ({ column, value }) => {
     if (checkArrayNull([column])) throw new Error("column cant be null");
 
     // StringInvalidCharsError(valueValue);
@@ -113,7 +26,7 @@ class Update {
     return this;
   };
 
-  static update_equalNotString = ({ column, value }) => {
+  update_equalNotString = ({ column, value }) => {
     if (checkArrayNull([column])) throw new Error("column cant be null");
 
     // StringInvalidCharsError(valueValue);
@@ -125,7 +38,7 @@ class Update {
   };
 
   // array = [{column, value, isStatement?}]
-  // static update_Array = (array) => {
+  //  update_Array = (array) => {
   //   if (!array) throw new Error("obj cant be null");
 
   //   array.forEach((obj) => {
@@ -139,7 +52,7 @@ class Update {
   //   return this;
   // };
 
-  static update_obj = (obj) => {
+  update_obj = (obj) => {
     if (!obj) throw new Error("obj cant be null");
 
     Object.keys(obj).forEach((key) => {
@@ -153,17 +66,17 @@ class Update {
 
   //**************** end updateFields ***************************//
 
-  static table = (table) => {
+  table = (table) => {
     this.#tableNameData = table;
     return this;
   };
 
-  static limit = (limit) => {
+  limit = (limit) => {
     this.#limitData = limit;
     return this;
   };
 
-  static endUpdate = (isWithSemicolon = true, withUpdateWord = true) => {
+  endUpdate = (isWithSemicolon = true, withUpdateWord = true) => {
     const tableName = this.#tableNameData;
     const limit = this.#limitData;
     let updateFieldsStatement = null;
@@ -175,7 +88,7 @@ class Update {
       updateFieldsStatement += update;
     });
 
-    this.#conditionData?.map((condition, index) => {
+    this._conditionData?.map((condition, index) => {
       if (index == 0) conditionStatement = "";
       if (index > 0 && conditionStatement) conditionStatement += " AND ";
       conditionStatement += condition;
@@ -183,7 +96,7 @@ class Update {
 
     this.#updateFieldsData = null;
     this.#tableNameData = null;
-    this.#conditionData = null;
+    this._conditionData = null;
     this.#limitData = null;
 
     // console.log();
@@ -195,4 +108,5 @@ class Update {
   };
 }
 
-module.exports = { Update };
+const newUpdate = new Update()
+module.exports = newUpdate;
