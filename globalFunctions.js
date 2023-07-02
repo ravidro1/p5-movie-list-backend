@@ -39,8 +39,20 @@ const ArrayInvalidCharsError = (arrayOfValues) => {
   });
 };
 
+const checkArrayNull = (array) => {
+  if (!Array.isArray(array)) return true;
+
+  let returnValue = false;
+  array.forEach((item) => {
+    if (item == null) returnValue = true;
+  });
+
+  return returnValue;
+};
+
 module.exports = {
   isTokenVerify,
   StringInvalidCharsError,
   ArrayInvalidCharsError,
+  checkArrayNull,
 };

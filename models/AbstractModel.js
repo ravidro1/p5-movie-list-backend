@@ -1,7 +1,8 @@
 const database = require("../database");
 
 const { _fieldsDataTypes } = require("./Models.Types");
-const { Select, Update, Insert, Delete, Trigger } = require("./statement");
+
+const { Insert, Delete, Select, Trigger, Update } = require("./statements");
 
 const generateField = (fieldRules) => {
   let field = `${fieldRules.name} `;

@@ -1,6 +1,6 @@
 const database = require("../database");
 const { OneRate, MovieReview } = require("../models");
-const { Select } = require("../models/statement");
+const { Select } = require("../models/statements");
 
 // [movie_id, rate]
 exports.createOrUpdateOneRate = async (req, res) => {

@@ -1,7 +1,7 @@
 const { uploadImage, deleteImage } = require("../cloudinary");
 const database = require("../database");
 const { MovieReview } = require("../models");
-const { Select } = require("../models/statement");
+const { Select } = require("../models/statements");
 
 // []
 exports.getAllMovieReviews = async (req, res) => {

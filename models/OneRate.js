@@ -1,6 +1,7 @@
 const AbstractModel = require("./AbstractModel");
 const { _fieldsDataTypes } = require("./Models.Types");
-const { Trigger, Update, Select } = require("./statement");
+
+const { Select, Trigger, Update } = require("./statements");
 
 module.exports = class OneRate extends AbstractModel {
   static fields = {
