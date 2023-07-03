@@ -42,4 +42,4 @@ class Insert {
   };
 }
 
-module.exports = Insert;
+module.exports =  Insert;

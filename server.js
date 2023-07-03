@@ -5,10 +5,11 @@ const app = express();
 
 const PORT = process.env.PORT;
 
-const { User, MovieReview, OneRate } = require("./models");
+const { User, MovieReview, OneRate, MovieComment } = require("./models");
 const userRoutes = require("./routes/userRoutes");
 const movieReviewRoutes = require("./routes/movieReviewRoutes");
 const oneRateRoutes = require("./routes/oneRateRoutes");
+const movieCommentRoutes = require("./routes/movieCommentRoutes");
 
 app.use(express.json());
 app.use(cors({ credentials: true, origin: [process.env.FRONTEND_URL] }));
@@ -17,6 +18,7 @@ async function registerTable() {
   await User.registerTable();
   await MovieReview.registerTable();
   await OneRate.registerTable();
+  await MovieComment.registerTable();
 }
 
 async function main() {
@@ -39,6 +41,7 @@ async function main() {
   app.use("/user", userRoutes);
   app.use("/movieReview", movieReviewRoutes);
   app.use("/oneRate", oneRateRoutes);
+  app.use("/movieCommentRoutes", movieCommentRoutes);
 
   app.listen(PORT, () => console.log("Listen To Port: ", PORT));
 }

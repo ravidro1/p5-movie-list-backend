@@ -194,7 +194,7 @@ module.exports = class AbstractModel {
       .limit(1)
       .selectEnd();
 
-    return (await database.execute(selectStatement))[0];
+    return (await database.execute(selectStatement))[0][0];
   }
 
   static async delete(conditionObj) {
@@ -210,12 +210,6 @@ module.exports = class AbstractModel {
   }
 
   static async deleteById(id) {
-    // const statement = _statementTypes.delete({
-    //   tableName: this.name,
-    //   objConditions: { id },
-    //   limit: 1,
-    // });
-
     const statement = Delete.table(this.name)
       .condition_equalNotString({ column: "id", value: id })
       .limit(1)
