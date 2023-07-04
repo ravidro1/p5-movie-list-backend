@@ -1,4 +1,4 @@
-const { checkArrayNull } = require("../../globalFunctions");
+const { checkArrayNotNull } = require("../../globalFunctions");
 
 class Trigger {
   static #triggerNameData = null;
@@ -8,7 +8,7 @@ class Trigger {
 
   //**************** start conditions ***************************//
   // static condition_equalString = ({ column, value }) => {
-  //   if (checkArrayNull([column])) throw new Error("column cant be null");
+  //   if (checkArrayNotNull([column])) throw new Error("column cant be null");
 
   //   if (!Array.isArray(this.#conditionData)) this.#conditionData = [];
   //   this.#conditionData.push(`${column}='${value}'`);
@@ -17,7 +17,7 @@ class Trigger {
   // };
 
   // static condition_equalNotString = ({ column, value }) => {
-  //   if (checkArrayNull([column])) throw new Error("column cant be null");
+  //   if (checkArrayNotNull([column])) throw new Error("column cant be null");
 
   //   if (!Array.isArray(this.#conditionData)) this.#conditionData = [];
   //   this.#conditionData.push(`${column}=(${value})`);
@@ -26,7 +26,7 @@ class Trigger {
   // };
 
   // static condition_findStringInJson = ({ column, keyOfJson = null, value }) => {
-  //   if (checkArrayNull([column])) throw new Error("column cant be null");
+  //   if (checkArrayNotNull([column])) throw new Error("column cant be null");
 
   //   // StringInvalidCharsError(value);
 
@@ -45,7 +45,7 @@ class Trigger {
   //   keyOfJson = null,
   //   value,
   // }) => {
-  //   if (checkArrayNull([column])) throw new Error("column cant be null");
+  //   if (checkArrayNotNull([column])) throw new Error("column cant be null");
 
   //   // StringInvalidCharsError(value);
 
@@ -75,7 +75,7 @@ class Trigger {
   // };
 
   // static condition_isIncludesString = ({ column, value }) => {
-  //   if (checkArrayNull([column, value])) throw new Error("column cant be null");
+  //   if (checkArrayNotNull([column, value])) throw new Error("column cant be null");
 
   //   // StringInvalidCharsError(value);
 
@@ -116,7 +116,7 @@ class Trigger {
     const triggerTable = this.#triggerTableData;
     const action = this.#actionData;
 
-    if (checkArrayNull([triggerName, event, triggerTable, action])) return null;
+    if (checkArrayNotNull([triggerName, event, triggerTable, action])) return null;
 
     this.#triggerNameData = null;
     this.#eventData = null;

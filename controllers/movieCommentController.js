@@ -55,7 +55,10 @@ exports.updateMovieComment = async (req, res) => {
 exports.getByMovieId = async (req, res) => {
   try {
     const { movie_id } = req.body;
-    const commentList = await MovieComment.find({ conditionObj: { movie_id } });
+    const commentList = await MovieComment.find({
+      conditionObj: { movie_id },
+      orderByObj: { updateAt: "DESC" },
+    });
     res.status(200).json({ message: "success", commentList });
   } catch (error) {
     console.error(error);

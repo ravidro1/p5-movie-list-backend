@@ -126,8 +126,12 @@ module.exports = class AbstractModel {
     return this.findById(res[0].insertId);
   }
 
-  static async findAll() {
-    const statement = Select.table(this.name).selectEnd();
+  static async findAll({ orderByObj } = {}) {
+    const statement = Select.table(this.name)
+      .orderByObj(orderByObj)
+      .selectEnd();
+
+    console.log(statement);
     const data = await database.execute(statement);
     return data[0];
   }
@@ -141,10 +145,11 @@ module.exports = class AbstractModel {
     return (await database.execute(statement))[0][0];
   }
 
-  static async find({ conditionObj, limit }) {
+  static async find({ conditionObj, limit, orderByObj = {} }) {
     const statement = Select.table(this.name)
       .condition_obj(conditionObj)
       .limit(limit)
+      .orderByObj(orderByObj)
       .selectEnd();
 
     return (await database.execute(statement))[0];

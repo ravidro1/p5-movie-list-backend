@@ -38,14 +38,10 @@ exports.getMovieReviewsByIndexes = async (req, res) => {
 // [movieName]
 exports.createMovie = async (req, res) => {
   try {
-    const regexPattern = /[^A-Za-z0-9]/g;
-
     const { name, description, releaseDate, categories, image } = req.body;
-    // const normalizeName = name.toLowerCase().replace(regexPattern, "");
 
     const newMovie = await MovieReview.create({
       name: name,
-      // normalizeName,
       description,
       releaseDate,
       categories: JSON.stringify(categories),
@@ -55,13 +51,13 @@ exports.createMovie = async (req, res) => {
     let imageUrl = null;
     if (image) imageUrl = await uploadImage(image, newMovie.id);
 
-    await MovieReview.updateById({
+    const editedMovie = await MovieReview.updateById({
       id: newMovie.id,
       updateFields: { pictureURL: imageUrl },
     });
 
     if (!newMovie) return res.status(400).json({ message: "fail" });
-    res.status(200).json({ message: "success", newMovie });
+    res.status(200).json({ message: "success", newMovie: editedMovie });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.message });
@@ -81,22 +77,6 @@ exports.deleteMovie = async (req, res) => {
   }
 };
 
-// const movies = await MovieReview.find({
-//   conditionObj:{}
-// statementConditions: [
-//   MovieReview._conditionTypes.findArrayInJson({
-//     field: "categories",
-//     values: categories,
-//   }),
-//   MovieReview._conditionTypes.isIncludesString({
-//     key: "name",
-//     value: name,
-//   }),
-// ],
-//   limit: 20,
-// });
-
-// [name?, categories?]
 exports.searchMovieReviewsByNameAndCategories = async (req, res) => {
   try {
     const { name, categories } = req.body;

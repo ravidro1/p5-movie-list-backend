@@ -40,13 +40,13 @@ module.exports = class MovieComment extends AbstractModel {
       .triggerName(`${this.name}1`)
       .triggerAction(
         Update.table(this.name)
-          .update_equalNotString({
+          .update_equalStatement({
             column: "new.username",
             value: Select.table("User")
               .field_normalColumnOrExpression({
                 columnOrExpression: "username",
               })
-              .condition_equalNotString({ column: "id", value: "new.user_id" })
+              .condition_equalStatement({ column: "id", value: "new.user_id" })
               .selectEnd(false),
           })
           .endUpdate(true, false)

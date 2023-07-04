@@ -17,11 +17,5 @@ module.exports = class User extends AbstractModel {
       type: _fieldsDataTypes.string(255),
       allowNull: false,
     },
-    // isAdmin: {
-    //   name: "isAdmin",
-    //   type: _fieldsDataTypes.boolean,
-    //   allowNull: false,
-    //   defaultValue: false,
-    // },
   };
 };

@@ -1,4 +1,9 @@
-const { checkArrayNull } = require("../../globalFunctions");
+const {
+  checkArrayNotNull,
+  convertCharsToSafeChars,
+  parseIfString,
+  checkArrayNotString,
+} = require("../../globalFunctions");
 const Condition = require("./conditions");
 
 class Update extends Condition {
@@ -14,22 +19,23 @@ class Update extends Condition {
   //**************** start updateFields ***************************//
 
   update_equalString = ({ column, value }) => {
-    if (checkArrayNull([column])) throw new Error("column cant be null");
+    if (checkArrayNotNull([column])) throw new Error("column cant be null");
 
-    // StringInvalidCharsError(valueValue);
+    const [safeValue] = convertCharsToSafeChars([value]);
 
     if (!Array.isArray(this.#updateFieldsData)) this.#updateFieldsData = [];
     this.#updateFieldsData.push(
-      `${column}=${value != null ? `'${value}'` : value}`
+      `${column}=${value != null ? `'${safeValue}'` : value}`
     );
 
     return this;
   };
 
   update_equalNotString = ({ column, value }) => {
-    if (checkArrayNull([column])) throw new Error("column cant be null");
-
-    // StringInvalidCharsError(valueValue);
+    const parseValue = parseIfString(value);
+    if (checkArrayNotNull([column])) throw new Error("column cant be null");
+    if (checkArrayNotString([parseValue]))
+      throw new Error("value cant be string");
 
     if (!Array.isArray(this.#updateFieldsData)) this.#updateFieldsData = [];
     this.#updateFieldsData.push(`${column}=(${value})`);
@@ -37,20 +43,14 @@ class Update extends Condition {
     return this;
   };
 
-  // array = [{column, value, isStatement?}]
-  //  update_Array = (array) => {
-  //   if (!array) throw new Error("obj cant be null");
+  update_equalStatement = ({ column, value }) => {
+    if (checkArrayNotNull([column])) throw new Error("column cant be null");
 
-  //   array.forEach((obj) => {
-  //     if (!obj?.column) return;
-  //     if (typeof obj?.value == "string" && !obj?.isStatement)
-  //       this.update_equalString({ column: obj?.column, value: obj?.value });
-  //     else
-  //       this.update_equalNotString({ column: obj?.column, value: obj?.value });
-  //   });
+    if (!Array.isArray(this.#updateFieldsData)) this.#updateFieldsData = [];
+    this.#updateFieldsData.push(`${column}=(${value})`);
 
-  //   return this;
-  // };
+    return this;
+  };
 
   update_obj = (obj) => {
     if (!obj) throw new Error("obj cant be null");
@@ -108,5 +108,5 @@ class Update extends Condition {
   };
 }
 
-const newUpdate = new Update()
+const newUpdate = new Update();
 module.exports = newUpdate;

@@ -46,7 +46,7 @@ module.exports = class MovieReview extends AbstractModel {
       .triggerName(`${this.name}1`)
       .triggerAction(
         Update.table(this.name)
-          .update_equalNotString({
+          .update_equalStatement({
             column: "new.normalizeName",
             value: Select.table(this.name)
               .field_combine({
@@ -64,7 +64,7 @@ module.exports = class MovieReview extends AbstractModel {
                   }),
                 ],
               })
-              .condition_equalNotString({ column: "id", value: "new.id" })
+              .condition_equalStatement({ column: "id", value: "new.id" })
               .selectEnd(false),
           })
           .endUpdate(true, false)
@@ -76,7 +76,7 @@ module.exports = class MovieReview extends AbstractModel {
       .triggerName(`${this.name}2`)
       .triggerAction(
         Update.table(this.name)
-          .update_equalNotString({
+          .update_equalStatement({
             column: "new.normalizeName",
             value: Select.table(this.name)
               .field_combine({
@@ -94,7 +94,7 @@ module.exports = class MovieReview extends AbstractModel {
                   }),
                 ],
               })
-              .condition_equalNotString({ column: "id", value: "new.id" })
+              .condition_equalStatement({ column: "id", value: "new.id" })
               .selectEnd(false),
           })
           .endUpdate(true, false)

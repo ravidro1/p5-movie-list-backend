@@ -1,4 +1,4 @@
-const { checkArrayNull } = require("../../globalFunctions");
+const { checkArrayNotNull } = require("../../globalFunctions");
 
 class Insert {
   static #tableNameData = null;
@@ -11,7 +11,7 @@ class Insert {
   };
 
   static keysAndValueObj = (obj) => {
-    if (checkArrayNull([obj]))
+    if (checkArrayNotNull([obj]))
       throw new Error("There must be at least one cell in the array");
 
     Object.keys(obj).forEach((key) => {

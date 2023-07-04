@@ -1,4 +1,4 @@
-const { checkArrayNull } = require("../../globalFunctions");
+const { checkArrayNotNull } = require("../../globalFunctions");
 const Condition = require("./conditions");
 
 class Select extends Condition {
@@ -19,7 +19,7 @@ class Select extends Condition {
     forCombineFunction = false,
     ifNullThen = null,
   }) => {
-    if (checkArrayNull([column, firstCell, lastCell]))
+    if (checkArrayNotNull([column, firstCell, lastCell]))
       throw new Error("column, firstCell, lastCell cant be null");
 
     if (!forCombineFunction) {
@@ -40,7 +40,7 @@ class Select extends Condition {
     columnOrExpression,
     ifNullThen = null,
   }) => {
-    if (checkArrayNull([columnOrExpression]))
+    if (checkArrayNotNull([columnOrExpression]))
       throw new Error("columnOrExpression cant be null");
 
     if (!Array.isArray(this.#fieldsData)) this.#fieldsData = [];
@@ -51,7 +51,7 @@ class Select extends Condition {
   };
 
   field_avg = ({ column, forCombineFunction = false, ifNullThen = null }) => {
-    if (checkArrayNull([column]))
+    if (checkArrayNotNull([column]))
       throw new Error("column, firstCell, lastCell cant be null");
 
     if (!forCombineFunction) {
@@ -65,7 +65,7 @@ class Select extends Condition {
   };
 
   field_sum = ({ column, forCombineFunction = false, ifNullThen = null }) => {
-    if (checkArrayNull([column]))
+    if (checkArrayNotNull([column]))
       throw new Error("column, firstCell, lastCell cant be null");
 
     if (!forCombineFunction) {
@@ -79,7 +79,7 @@ class Select extends Condition {
   };
 
   field_count = ({ column, forCombineFunction = false, ifNullThen = null }) => {
-    if (checkArrayNull([column]))
+    if (checkArrayNotNull([column]))
       throw new Error("column, firstCell, lastCell cant be null");
 
     if (!forCombineFunction) {
@@ -93,7 +93,7 @@ class Select extends Condition {
   };
 
   field_lower = ({ column, forCombineFunction = false, ifNullThen = null }) => {
-    if (checkArrayNull([column]))
+    if (checkArrayNotNull([column]))
       throw new Error("column, firstCell, lastCell cant be null");
 
     if (!forCombineFunction) {
@@ -107,7 +107,7 @@ class Select extends Condition {
   };
 
   field_upper = ({ column, forCombineFunction = false, ifNullThen = null }) => {
-    if (checkArrayNull([column]))
+    if (checkArrayNotNull([column]))
       throw new Error("column, firstCell, lastCell cant be null");
 
     if (!forCombineFunction) {
@@ -125,7 +125,7 @@ class Select extends Condition {
     forCombineFunction = false,
     ifNullThen = null,
   }) => {
-    if (checkArrayNull([column]))
+    if (checkArrayNotNull([column]))
       throw new Error("column, firstCell, lastCell cant be null");
 
     if (!forCombineFunction) {
@@ -145,7 +145,7 @@ class Select extends Condition {
     forCombineFunction = false,
     ifNullThen = null,
   }) => {
-    if (checkArrayNull([column, from, to]))
+    if (checkArrayNotNull([column, from, to]))
       throw new Error("column cant be null");
 
     if (!forCombineFunction) {
@@ -162,7 +162,7 @@ class Select extends Condition {
   };
 
   field_combine = ({ column, arrayOfFunctions, ifNullThen = null }) => {
-    if (checkArrayNull([column, arrayOfFunctions]))
+    if (checkArrayNotNull([column, arrayOfFunctions]))
       throw new Error("column, arrayOfFunctions cant be null");
 
     let expression = "";
@@ -192,10 +192,22 @@ class Select extends Condition {
   };
 
   orderBy = ({ column, ASC_OR_DESC = "ASC" }) => {
-    if (checkArrayNull([column])) throw new Error("column cant be null");
+    if (checkArrayNotNull([column])) throw new Error("column cant be null");
 
     if (!Array.isArray(this.#orderByData)) this.#orderByData = [];
-    this.#orderByData.push(`${column} ${ASC_OR_DESC}'`);
+    this.#orderByData.push(`${column} ${ASC_OR_DESC}`);
+
+    return this;
+  };
+
+  // [obj = {<column>: <ASC_OR_DESC>}]
+  orderByObj = (obj) => {
+    if (typeof obj != "object") return this;
+
+    Object.keys(obj).forEach((key) => {
+      if (!Array.isArray(this.#orderByData)) this.#orderByData = [];
+      this.#orderByData.push(`${key} ${obj[key]}`);
+    });
 
     return this;
   };
