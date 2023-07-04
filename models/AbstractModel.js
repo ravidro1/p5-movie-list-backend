@@ -1,6 +1,6 @@
 const database = require("../database");
 
-const { _fieldsDataTypes } = require("./Models.Types");
+const { _fieldsDataTypes, oneField } = require("./fields");
 
 const { Insert, Delete, Select, Trigger, Update } = require("./statements");
 
@@ -48,14 +48,14 @@ const generateRules = (rulesObj) => {
 module.exports = class AbstractModel {
   // fields that every model have
   static fields = {
-    createAt: {
+    createAt: oneField({
       name: "createAt",
       type: _fieldsDataTypes.date_timestamp_create,
-    },
-    updateAt: {
+    }),
+    updateAt: oneField({
       name: "updateAt",
       type: _fieldsDataTypes.date_timestamp_update,
-    },
+    }),
   };
 
   // Model Functions

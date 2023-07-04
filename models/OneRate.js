@@ -1,5 +1,5 @@
 const AbstractModel = require("./AbstractModel");
-const { _fieldsDataTypes } = require("./Models.Types");
+const { oneField, _fieldsDataTypes, fkField } = require("./fields");
 
 const { Select, Trigger, Update } = require("./statements");
 
@@ -7,26 +7,30 @@ module.exports = class OneRate extends AbstractModel {
   static fields = {
     ...this.fields,
 
-    user_id: {
+    user_id: oneField({
       name: "user_id",
       type: _fieldsDataTypes.int,
-      fk: {
+      fk: fkField({
         table: "User",
         onDelete: "DELETE_WITH_TRIGGER",
-      },
+      }),
       allowNull: false,
-    },
-    movie_id: {
+    }),
+    movie_id: oneField({
       name: "movie_id",
       type: _fieldsDataTypes.int,
-      fk: {
+      fk: fkField({
         table: "MovieReview",
         onDelete: "CASCADE",
-      },
+      }),
       allowNull: false,
-    },
-    rate: { name: "rate", type: _fieldsDataTypes.float, defaultValue: 0 },
-    allowNull: false,
+    }),
+    rate: oneField({
+      name: "rate",
+      type: _fieldsDataTypes.float,
+      defaultValue: 0,
+      allowNull: false,
+    }),
   };
 
   static rules = {

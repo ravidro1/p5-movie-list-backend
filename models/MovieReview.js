@@ -1,5 +1,5 @@
 const AbstractModel = require("./AbstractModel");
-const { _fieldsDataTypes } = require("./Models.Types");
+const { oneField, _fieldsDataTypes } = require("./fields");
 
 const { Select, Trigger, Update } = require("./statements");
 
@@ -7,38 +7,42 @@ module.exports = class MovieReview extends AbstractModel {
   static fields = {
     ...this.fields,
 
-    name: {
+    name: oneField({
       name: "name",
       type: _fieldsDataTypes.char(255),
       unique: true,
       allowNull: false,
-    },
-    normalizeName: {
+    }),
+    normalizeName: oneField({
       name: "normalizeName",
       type: _fieldsDataTypes.char(255),
       unique: true,
       // allowNull: false,
-    },
-    averageRateScore: {
+    }),
+    averageRateScore: oneField({
       name: "averageRateScore",
       type: _fieldsDataTypes.float,
       defaultValue: 0,
       allowNull: false,
-    },
+    }),
 
-    numberOfRate: {
+    numberOfRate: oneField({
       name: "numberOfRate",
       type: _fieldsDataTypes.int,
       defaultValue: 0,
       allowNull: false,
-    },
-    description: { name: "description", type: _fieldsDataTypes.string(4000) },
-    categories: { name: "categories", type: _fieldsDataTypes.json },
-    releaseDate: { name: "releaseDate", type: _fieldsDataTypes.date },
-    pictureURL: { name: "pictureURL", type: _fieldsDataTypes.string(4000) },
+    }),
+    description: oneField({
+      name: "description",
+      type: _fieldsDataTypes.string(4000),
+    }),
+    categories: oneField({ name: "categories", type: _fieldsDataTypes.json }),
+    releaseDate: oneField({ name: "releaseDate", type: _fieldsDataTypes.date }),
+    pictureURL: oneField({
+      name: "pictureURL",
+      type: _fieldsDataTypes.string(4000),
+    }),
   };
-
-  static rules = {};
 
   static triggers = [
     Trigger.table(this.name)

@@ -12,18 +12,31 @@ const _fieldsDataTypes = {
   boolean: "BOOLEAN",
 };
 
-// fields:
-//? TYPES:
-// name:
-// type:
-// allowNull?:
-// defaultValue?:
-// minLength?:
-// maxLength?:
-// unique?:
-// fk? - create foreign key  {
-//    onDelete: {
-//!      DELETE_WITH_TRIGGER - delete all items with this fk but not working when current table have trigger for update the fk-table on this-table delete.
-//!      CASCADE - delete all items with this fk but does not activate the delete trigger of current table.
-//    }
-// }
+const oneField = ({
+  name,
+  type,
+  allowNull,
+  defaultValue,
+  minLength,
+  maxLength,
+  unique,
+  fk,
+}) => {
+  return {
+    name,
+    type,
+    allowNull,
+    defaultValue,
+    minLength,
+    maxLength,
+    unique,
+    fk,
+  };
+};
+
+const fkField = ({ table, onDelete }) => {
+  return { table, onDelete };
+};
+
+
+module.exports = { _fieldsDataTypes, oneField, fkField };

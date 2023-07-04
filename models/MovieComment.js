@@ -1,37 +1,30 @@
 const AbstractModel = require("./AbstractModel");
-const { _fieldsDataTypes } = require("./Models.Types");
-
+const { oneField, _fieldsDataTypes, fkField } = require("./fields");
 const { Select, Trigger, Update } = require("./statements");
 
 module.exports = class MovieComment extends AbstractModel {
   static fields = {
     ...this.fields,
 
-    content: {
+    content: oneField({
       name: "content",
       type: _fieldsDataTypes.string(6000),
       allowNull: false,
-    },
-    user_id: {
+    }),
+    user_id: oneField({
       name: "user_id",
       type: _fieldsDataTypes.int,
       allowNull: false,
-      fk: {
-        table: "User",
-        onDelete: "CASCADE",
-      },
-    },
-    username: { name: "username", type: _fieldsDataTypes.char(255) },
+      fk: fkField({ table: "User", onDelete: "CASCADE" }),
+    }),
+    username: oneField({ name: "username", type: _fieldsDataTypes.char(255) }),
 
-    movie_id: {
+    movie_id: oneField({
       name: "movie_id",
       type: _fieldsDataTypes.int,
       allowNull: false,
-      fk: {
-        table: "MovieReview",
-        onDelete: "CASCADE",
-      },
-    },
+      fk: fkField({ table: "MovieReview", onDelete: "CASCADE" }),
+    }),
   };
 
   static triggers = [
